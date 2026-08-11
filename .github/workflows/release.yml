@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build DMGs and publish
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Build packages
+        run: |
+          chmod +x scripts/build_and_package.sh
+          # Align VERSION with tag (v1.0.0 -> 1.0.0)
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+          sed -i '' "s/^VERSION=.*/VERSION=\"${VERSION}\"/" scripts/build_and_package.sh
+          ./scripts/build_and_package.sh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: GruMD ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            releases/GruMD-*-apple-silicon.dmg
+            releases/GruMD-*-intel.dmg
+            releases/GruMD-*-universal.dmg
+          body: |
+            ## Downloads
+
+            | File | Mac |
+            |------|-----|
+            | `GruMD-*-apple-silicon.dmg` | Apple Silicon (M1 / M2 / M3 / M4 …) |
+            | `GruMD-*-intel.dmg` | Intel |
+            | `GruMD-*-universal.dmg` | Universal (both) |
+
+            ### Install
+
+            1. Open the DMG → drag **GruMD** into **Applications**.
+            2. If Gatekeeper blocks: right-click → **Open** → **Open**.
