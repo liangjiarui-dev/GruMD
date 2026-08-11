@@ -41,6 +41,10 @@ jobs:
             releases/GruMD-*-intel.dmg
             releases/GruMD-*-universal.dmg
           body: |
+            ## What's new
+
+            See [CHANGELOG.md](https://github.com/liangjiarui-dev/GruMD/blob/main/CHANGELOG.md) for this version.
+
             ## Downloads
 
             | File | Mac |

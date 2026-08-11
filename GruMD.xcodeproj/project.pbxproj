@@ -13,6 +13,7 @@
 		A10000000000000000000004 /* MarkdownPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* MarkdownPreview.swift */; };
 		A10000000000000000000005 /* FileWatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* FileWatcher.swift */; };
 		A10000000000000000000006 /* LayoutMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* LayoutMode.swift */; };
+		A1000000000000000000000C /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000C /* Theme.swift */; };
 		A10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* Assets.xcassets */; };
 		A10000000000000000000008 /* marked.min.js in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* marked.min.js */; };
 		A10000000000000000000009 /* preview.css in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000009 /* preview.css */; };
@@ -25,6 +26,7 @@
 		A20000000000000000000004 /* MarkdownPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownPreview.swift; sourceTree = "<group>"; };
 		A20000000000000000000005 /* FileWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileWatcher.swift; sourceTree = "<group>"; };
 		A20000000000000000000006 /* LayoutMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutMode.swift; sourceTree = "<group>"; };
+		A2000000000000000000000C /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A20000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000008 /* marked.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = marked.min.js; sourceTree = "<group>"; };
 		A20000000000000000000009 /* preview.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = preview.css; sourceTree = "<group>"; };
@@ -61,6 +63,7 @@
 				A20000000000000000000004 /* MarkdownPreview.swift */,
 				A20000000000000000000005 /* FileWatcher.swift */,
 				A20000000000000000000006 /* LayoutMode.swift */,
+				A2000000000000000000000C /* Theme.swift */,
 				A20000000000000000000007 /* Assets.xcassets */,
 				A50000000000000000000003 /* Resources */,
 				A2000000000000000000000A /* Info.plist */,
@@ -163,6 +166,7 @@
 				A10000000000000000000004 /* MarkdownPreview.swift in Sources */,
 				A10000000000000000000005 /* FileWatcher.swift in Sources */,
 				A10000000000000000000006 /* LayoutMode.swift in Sources */,
+				A1000000000000000000000C /* Theme.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -215,7 +219,7 @@
 				CODE_SIGN_ENTITLEMENTS = GruMD/GruMD.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -225,7 +229,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -241,7 +245,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -251,7 +255,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

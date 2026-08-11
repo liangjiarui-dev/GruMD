@@ -5,9 +5,10 @@ struct EditorView: View {
     var fileURL: URL?
 
     @AppStorage("defaultLayout") private var defaultLayoutRaw: String = LayoutMode.split.rawValue
-    @AppStorage("previewFontSize") private var previewFontSize: Double = 16
-    @AppStorage("editorFontSize") private var editorFontSize: Double = 14
+    @AppStorage("previewFontSize") private var previewFontSize: Double = 17
+    @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
+    @AppStorage("showStatusBar") private var showStatusBar: Bool = true
 
     @State private var layout: LayoutMode = .split
     @State private var didApplyDefaultLayout = false
@@ -15,19 +16,31 @@ struct EditorView: View {
     @State private var pendingDiskText: String?
     @State private var lastKnownTextOnDisk: String = ""
     @State private var isReloading = false
-
-    /// Held via reference box so SwiftUI does not re-create the watcher every body pass.
     @State private var watcherBox = FileWatcherBox()
     @Environment(\.colorScheme) private var colorScheme
 
+    private var wordCount: Int {
+        document.text.split { $0.isWhitespace || $0.isNewline }.count
+    }
+
+    private var lineCount: Int {
+        max(document.text.components(separatedBy: .newlines).count, 1)
+    }
+
+    private var charCount: Int {
+        document.text.count
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            layoutBar
-            Divider()
+            chromeBar
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if showStatusBar {
+                statusBar
+            }
         }
-        .background(Color(nsColor: .textBackgroundColor))
+        .background(GruMDTheme.windowBackground)
         .onAppear {
             if !didApplyDefaultLayout {
                 layout = LayoutMode(rawValue: defaultLayoutRaw) ?? .split
@@ -69,37 +82,98 @@ struct EditorView: View {
         }
     }
 
-    /// In-window control (avoids macOS 26 toolbar hosting crash with segmented Picker).
-    private var layoutBar: some View {
-        HStack(spacing: 8) {
-            Text("Layout")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+    // MARK: - Chrome
 
-            Picker("", selection: $layout) {
-                Text("Split").tag(LayoutMode.split)
-                Text("Editor").tag(LayoutMode.editorOnly)
-                Text("Preview").tag(LayoutMode.previewOnly)
-            }
-            .pickerStyle(.segmented)
-            .frame(maxWidth: 260)
-            .labelsHidden()
-            .controlSize(.small)
+    private var chromeBar: some View {
+        HStack(spacing: 14) {
+            layoutControl
 
-            Spacer()
+            Spacer(minLength: 8)
 
-            if let fileURL {
-                Text(fileURL.lastPathComponent)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+            fileTitle
+
+            Spacer(minLength: 8)
+
+            // Visual balance for traffic lights / title
+            Color.clear.frame(width: 120, height: 1)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background {
+            ZStack {
+                Rectangle().fill(.ultraThinMaterial)
+                LinearGradient(
+                    colors: [
+                        Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03),
+                        Color.clear
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .background(.bar)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
+        }
     }
+
+    private var layoutControl: some View {
+        HStack(spacing: 0) {
+            ForEach(LayoutMode.allCases) { mode in
+                Button {
+                    withAnimation(.easeInOut(duration: 0.18)) {
+                        layout = mode
+                    }
+                } label: {
+                    Image(systemName: mode.systemImage)
+                        .font(.system(size: 13, weight: .semibold))
+                        .frame(width: 34, height: 26)
+                        .foregroundStyle(layout == mode ? Color.white : Color.secondary)
+                        .background {
+                            if layout == mode {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .fill(GruMDTheme.accent)
+                                    .shadow(color: GruMDTheme.accent.opacity(0.35), radius: 3, y: 1)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .help(mode.title)
+            }
+        }
+        .padding(3)
+        .background {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.06))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+        }
+    }
+
+    private var fileTitle: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "doc.richtext")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(GruMDTheme.accent)
+            Text(fileURL?.lastPathComponent ?? "Untitled")
+                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .foregroundStyle(.primary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background {
+            Capsule(style: .continuous)
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
+        }
+    }
+
+    // MARK: - Content
 
     @ViewBuilder
     private var content: some View {
@@ -107,9 +181,9 @@ struct EditorView: View {
         case .split:
             HSplitView {
                 editorPane
-                    .frame(minWidth: 200)
+                    .frame(minWidth: 260)
                 previewPane
-                    .frame(minWidth: 200)
+                    .frame(minWidth: 280)
             }
         case .editorOnly:
             editorPane
@@ -119,26 +193,92 @@ struct EditorView: View {
     }
 
     private var editorPane: some View {
-        TextEditor(text: $document.text)
-            .font(.system(size: editorFontSize, design: .monospaced))
-            .scrollContentBackground(.hidden)
-            .padding(12)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(nsColor: .textBackgroundColor))
-            .accessibilityLabel("Markdown editor")
+        VStack(spacing: 0) {
+            paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
+            TextEditor(text: $document.text)
+                .font(GruMDTheme.editorFont(size: editorFontSize))
+                .scrollContentBackground(.hidden)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(GruMDTheme.contentBackground)
+                .accessibilityLabel("Markdown editor")
+        }
     }
 
     private var previewPane: some View {
-        MarkdownPreview(
-            markdown: document.text,
-            baseURL: fileURL?.deletingLastPathComponent(),
-            fontSize: previewFontSize,
-            isDark: colorScheme == .dark
-        )
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(nsColor: .textBackgroundColor))
-        .accessibilityLabel("Markdown preview")
+        VStack(spacing: 0) {
+            paneHeader(title: "Preview", systemImage: "eye")
+            MarkdownPreview(
+                markdown: document.text,
+                baseURL: fileURL?.deletingLastPathComponent(),
+                fontSize: previewFontSize,
+                isDark: colorScheme == .dark
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(GruMDTheme.contentBackground)
+            .accessibilityLabel("Markdown preview")
+        }
     }
+
+    private func paneHeader(title: String, systemImage: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: systemImage)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(GruMDTheme.accent)
+            Text(title.uppercased())
+                .font(GruMDTheme.paneLabel)
+                .foregroundStyle(.secondary)
+                .tracking(0.6)
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
+        .background(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
+        }
+    }
+
+    // MARK: - Status
+
+    private var statusBar: some View {
+        HStack(spacing: 14) {
+            Label("\(lineCount) lines", systemImage: "text.alignleft")
+            Label("\(wordCount) words", systemImage: "textformat.abc")
+            Label("\(charCount) chars", systemImage: "character")
+
+            Spacer()
+
+            if autoReloadExternal {
+                Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
+                    .foregroundStyle(.secondary)
+            }
+
+            Text("GruMD 1.1")
+                .foregroundStyle(.tertiary)
+        }
+        .labelStyle(.titleAndIcon)
+        .font(GruMDTheme.statusFont)
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 6)
+        .background {
+            ZStack {
+                Rectangle().fill(.bar)
+                Rectangle().fill(Color.primary.opacity(0.02))
+            }
+        }
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(Color.primary.opacity(0.06))
+                .frame(height: 0.5)
+        }
+    }
+
+    // MARK: - File watch
 
     private func rebindWatcher() {
         watcherBox.watcher.stop()
@@ -177,7 +317,6 @@ struct EditorView: View {
     }
 }
 
-/// Stable box for FileWatcher identity under `@State`.
 private final class FileWatcherBox {
     let watcher = FileWatcher()
 }

@@ -53,8 +53,17 @@ Local DMGs land in `releases/` (gitignored). To publish them on GitHub:
 
 ```bash
 # needs: git remote + GitHub CLI (gh) logged in
-./scripts/publish_release.sh 1.0.0
+./scripts/publish_release.sh 1.1.0
 ```
+
+## Versions
+
+| Version | Notes |
+|---------|--------|
+| **1.1.0** | Apple-style UI refresh, new icon, status bar, reader preview |
+| 1.0.0 | Initial release |
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Project layout
 

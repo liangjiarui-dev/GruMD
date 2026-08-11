@@ -43,37 +43,35 @@ struct MarkdownDocument: FileDocument {
 }
 
 private let defaultWelcome = """
-# Welcome to GruMD
+# GruMD
 
-A minimal Markdown reader & light editor for macOS.
+A quiet place for local Markdown.
 
-## What you can do
+## Start here
 
-- Open local `.md` files (double-click in Finder)
-- Edit and **save** with ⌘S
-- Preview common [GFM](https://github.github.com/gfm/) cleanly
-- Optional reload when the file changes on disk
+- Open a `.md` file, or just start typing
+- Save with **⌘S**
+- Switch layout with the control at the top-left
 
-## GFM samples
+## Sample
 
-| Feature | Status |
-|--------|--------|
-| Tables | ✓ |
-| Task lists | ✓ |
-| Code | ✓ |
+| GFM | Supported |
+|-----|-----------|
+| Tables | Yes |
+| Task lists | Yes |
+| Code blocks | Yes |
 
-- [x] Open a file
-- [ ] Write something nice
+- [x] Read
+- [x] Edit
+- [ ] Ship something nice
 
 ```swift
-print("Hello, GruMD")
+print("Hello from GruMD 1.1")
 ```
 
-> Keep it small. Keep it local. Keep it fast.
-
-![Local images work relative to the file](./example.png)
+> Designed to feel like a first-party macOS app — small, local, offline.
 
 ---
 
-*No knowledge base. No plugins. No AI. Just Markdown.*
+*No vault. No plugins. No AI.*
 """
