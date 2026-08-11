@@ -1,50 +1,24 @@
 import AppKit
 
-/// Launch without a sample Untitled document.
+/// Launch policy for GruMD.
+///
+/// We allow a single startup window (SwiftUI `DocumentGroup` needs one),
+/// but that window shows the in-app launcher — not a sample Markdown file.
+/// Automatic "open a file panel after closing Untitled" is intentionally gone
+/// (that caused the flash you saw).
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private var didOfferOpenPanel = false
-
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
-        false
-    }
-
-    func applicationOpenUntitledFile(_ sender: NSApplication) -> Bool {
-        false
-    }
-
-    func applicationDidFinishLaunching(_ notification: Notification) {
-        // DocumentGroup may still create an Untitled window; close it and offer Open.
-        DispatchQueue.main.async {
-            self.dismissAutoUntitledAndOfferOpen()
-        }
-        // Second pass: SwiftUI sometimes creates the document a moment later.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            self.dismissAutoUntitledAndOfferOpen()
-        }
+        // Let DocumentGroup create one window so the app isn't windowless.
+        // EditorView renders the launcher when fileURL == nil.
+        true
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
-            didOfferOpenPanel = false
-            DispatchQueue.main.async {
-                self.dismissAutoUntitledAndOfferOpen()
-            }
+            // Dock click with no windows: open panel (user-driven, no flash).
+            NSDocumentController.shared.openDocument(self)
             return false
         }
         return true
-    }
-
-    private func dismissAutoUntitledAndOfferOpen() {
-        // Close only unsaved, never-saved documents (Untitled).
-        for document in NSDocumentController.shared.documents {
-            if document.fileURL == nil, !document.isDocumentEdited {
-                document.close()
-            }
-        }
-
-        if NSDocumentController.shared.documents.isEmpty, !didOfferOpenPanel {
-            didOfferOpenPanel = true
-            NSDocumentController.shared.openDocument(self)
-        }
     }
 }

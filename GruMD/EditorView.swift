@@ -38,6 +38,8 @@ struct EditorView: View {
 
     @State private var dropTargeted = false
     @State private var exportError: String?
+    /// Untitled window shows the launcher until the user chooses New or opens a file.
+    @State private var isComposingNew = false
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -53,39 +55,24 @@ struct EditorView: View {
         document.text.count
     }
 
-
-    private var recentURLs: [URL] {
-        NSDocumentController.shared.recentDocumentURLs.filter {
-            ["md", "markdown", "mdown", "mkd", "txt"].contains($0.pathExtension.lowercased())
-        }
-    }
-
-    private var showsWelcomeChrome: Bool {
-        fileURL == nil
+    /// Home screen instead of an empty Untitled Markdown document.
+    private var showsLauncher: Bool {
+        fileURL == nil && !isComposingNew
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            chromeBar
-            if showFindBar && layout != .previewOnly {
-                FindReplaceBar(
-                    query: $findQuery,
-                    replacement: $replaceText,
-                    caseSensitive: $findCaseSensitive,
-                    showReplace: $showReplaceFields,
-                    matchCount: findMatches.count,
-                    currentIndex: findIndex,
-                    onNext: { stepFind(1) },
-                    onPrevious: { stepFind(-1) },
-                    onReplace: replaceCurrent,
-                    onReplaceAll: replaceAll,
-                    onClose: closeFind
+        Group {
+            if showsLauncher {
+                LauncherView(
+                    onOpen: openPanel,
+                    onNew: {
+                        isComposingNew = true
+                        document.text = ""
+                    },
+                    onOpenRecent: openRecent
                 )
-            }
-            content
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showStatusBar {
-                statusBar
+            } else {
+                documentWorkspace
             }
         }
         .background(GruMDTheme.windowBackground)
@@ -96,11 +83,17 @@ struct EditorView: View {
             }
             lastKnownTextOnDisk = document.text
             rebindWatcher()
+            if fileURL != nil {
+                isComposingNew = false
+            }
         }
         .onDisappear { watcherBox.watcher.stop() }
         .onChange(of: fileURL?.path) { _ in
             lastKnownTextOnDisk = document.text
             rebindWatcher()
+            if fileURL != nil {
+                isComposingNew = false
+            }
         }
         .onChange(of: document.text) { newValue in
             if newValue == lastKnownTextOnDisk {
@@ -152,6 +145,33 @@ struct EditorView: View {
             Button("OK", role: .cancel) { exportError = nil }
         } message: {
             Text(exportError ?? "")
+        }
+    }
+
+    /// Editor + preview chrome (only after Open / New).
+    private var documentWorkspace: some View {
+        VStack(spacing: 0) {
+            chromeBar
+            if showFindBar && layout != .previewOnly {
+                FindReplaceBar(
+                    query: $findQuery,
+                    replacement: $replaceText,
+                    caseSensitive: $findCaseSensitive,
+                    showReplace: $showReplaceFields,
+                    matchCount: findMatches.count,
+                    currentIndex: findIndex,
+                    onNext: { stepFind(1) },
+                    onPrevious: { stepFind(-1) },
+                    onReplace: replaceCurrent,
+                    onReplaceAll: replaceAll,
+                    onClose: closeFind
+                )
+            }
+            content
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if showStatusBar {
+                statusBar
+            }
         }
     }
 
@@ -284,9 +304,6 @@ struct EditorView: View {
 
     private var editorColumn: some View {
         VStack(spacing: 0) {
-            if showsWelcomeChrome {
-                welcomeStrip
-            }
             paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
             TextEditor(text: $document.text)
                 .font(editorFont)
@@ -321,56 +338,6 @@ struct EditorView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(GruMDTheme.contentBackground)
             .accessibilityLabel("Markdown preview")
-        }
-    }
-
-    private var welcomeStrip: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Image(nsImage: NSApp.applicationIconImage)
-                    .resizable()
-                    .frame(width: 40, height: 40)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("GruMD")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    Text("Open a Markdown file or start typing.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("Open…") { openPanel() }
-                    .keyboardShortcut("o", modifiers: [.command])
-            }
-
-            if !recentURLs.isEmpty {
-                Text("Recent")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
-                ForEach(Array(recentURLs.prefix(6).enumerated()), id: \.offset) { _, url in
-                    Button {
-                        openRecent(url)
-                    } label: {
-                        HStack {
-                            Image(systemName: "doc.text")
-                                .foregroundStyle(GruMDTheme.accent)
-                            Text(url.lastPathComponent)
-                                .lineLimit(1)
-                            Spacer()
-                            Text(url.deletingLastPathComponent().path)
-                                .font(.caption2)
-                                .foregroundStyle(.tertiary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-        }
-        .padding(14)
-        .background(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
-        .overlay(alignment: .bottom) {
-            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 0.5)
         }
     }
 
@@ -411,7 +378,7 @@ struct EditorView: View {
             if autoReloadExternal {
                 Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
             }
-            Text("GruMD 1.3.3")
+            Text("GruMD 1.3.4")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)
@@ -566,7 +533,15 @@ struct EditorView: View {
     }
 
     private func openRecent(_ url: URL) {
-        NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
+        NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, alreadyOpen, error in
+            guard error == nil else { return }
+            // Close the home/Untitled window if we were on the launcher.
+            DispatchQueue.main.async {
+                for doc in NSDocumentController.shared.documents where doc.fileURL == nil && !doc.isDocumentEdited {
+                    doc.close()
+                }
+            }
+        }
     }
 
     // MARK: - Drop images

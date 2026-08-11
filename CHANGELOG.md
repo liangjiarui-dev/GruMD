@@ -1,11 +1,17 @@
 # Changelog
 
+## [1.3.4] — 2026-08-11
+
+### Behavior
+
+- Launch shows a stable **home screen** (Open / New / Recent) — no flash of a document window that closes
+- No more create-then-destroy Untitled hack
+
 ## [1.3.3] — 2026-08-11
 
 ### Behavior
 
 - Removed built-in welcome/sample Markdown template (new docs start empty)
-- Stronger launch behavior: auto Untitled is closed; Open dialog is shown instead
 
 ## [1.3.2] — 2026-08-11
 
