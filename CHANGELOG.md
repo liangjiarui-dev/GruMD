@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.10] — 2026-08-11
+
+### Behavior
+
+- Block automatic Untitled at the document-controller level (no visible flash from Applications)
+- Cold start still opens the file picker only; Finder “Open With” opens just that file
+
 ## [1.3.9] — 2026-08-11
 
 ### Behavior

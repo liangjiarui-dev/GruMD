@@ -1,4 +1,5 @@
 import SwiftUI
+import AppKit
 
 @main
 struct GruMDApp: App {
@@ -11,6 +12,17 @@ struct GruMDApp: App {
         // Larger default workspace — not a tiny utility window.
         .defaultSize(width: 1320, height: 860)
         .commands {
+            CommandGroup(replacing: .newItem) {
+                Button("New Document") {
+                    if let controller = NSDocumentController.shared as? GruMDDocumentController {
+                        controller.newDocument(nil)
+                    } else {
+                        NSDocumentController.shared.newDocument(nil)
+                    }
+                }
+                .keyboardShortcut("n", modifiers: [.command])
+            }
+
             CommandGroup(after: .textEditing) {
                 Button("Find…") {
                     NotificationCenter.default.post(name: .grumdShowFind, object: nil)

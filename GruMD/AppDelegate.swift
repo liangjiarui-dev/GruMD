@@ -1,17 +1,23 @@
 import AppKit
 
-/// TextEdit-style launch:
-/// - Cold start with no file → Open panel only (no home window, no Untitled)
-/// - Open via double-click / “Open With” → that document only
-/// - File → New still creates an empty Untitled when the user asks
+/// TextEdit-style launch without a visible Untitled flash.
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    /// Set when the system hands us files at launch (before didFinishLaunching work).
-    private var openedDocumentFromExternalRequest = false
-    private var didPresentOpenPanel = false
+    private var openedFromFileEvent = false
+    private var didOfferOpenPanel = false
+    private var windowObserver: NSObjectProtocol?
 
     func applicationWillFinishLaunching(_ notification: Notification) {
-        // Ensure we win the shared document-controller race early.
-        _ = NSDocumentController.shared
+        // Must install custom controller before anything touches `.shared`.
+        _ = GruMDDocumentController()
+
+        // Catch any window the moment it becomes key/main and hide stray Untitled.
+        windowObserver = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            self?.suppressUntitledWindowIfNeeded(note.object as? NSWindow)
+        }
     }
 
     func applicationShouldOpenUntitledFile(_ sender: NSApplication) -> Bool {
@@ -22,62 +28,111 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         false
     }
 
-    /// Finder / “Open With” / double-click.
     func application(_ application: NSApplication, open urls: [URL]) {
-        openedDocumentFromExternalRequest = true
+        openedFromFileEvent = true
         for url in urls {
             NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
         }
     }
 
     func application(_ sender: NSApplication, openFile filename: String) -> Bool {
-        openedDocumentFromExternalRequest = true
+        openedFromFileEvent = true
         let url = URL(fileURLWithPath: filename)
         NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
         return true
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Wait briefly so file-open events from Finder can register first.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-            self.finishLaunchIfNeeded()
+        // Hide any window that already appeared (prevents one-frame flash).
+        for window in NSApp.windows where isLikelyUntitledDocumentWindow(window) {
+            window.alphaValue = 0
+            window.orderOut(nil)
         }
-        // One more pass: DocumentGroup sometimes creates a late Untitled.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+        closeStrayUntitledDocuments()
+
+        DispatchQueue.main.async {
             self.closeStrayUntitledDocuments()
-            self.finishLaunchIfNeeded()
+            self.presentOpenPanelIfIdle()
+        }
+        // Late DocumentGroup Untitled (if any)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.closeStrayUntitledDocuments()
+            self.presentOpenPanelIfIdle()
         }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
-            didPresentOpenPanel = false
-            openedDocumentFromExternalRequest = false
+            didOfferOpenPanel = false
+            openedFromFileEvent = false
             NSDocumentController.shared.openDocument(self)
             return false
         }
         return true
     }
 
-    private func finishLaunchIfNeeded() {
-        closeStrayUntitledDocuments()
-
-        let hasRealDocument = NSDocumentController.shared.documents.contains { $0.fileURL != nil }
-        if hasRealDocument || openedDocumentFromExternalRequest {
-            return
-        }
-        if NSDocumentController.shared.documents.isEmpty, !didPresentOpenPanel {
-            didPresentOpenPanel = true
-            NSDocumentController.shared.openDocument(self)
+    deinit {
+        if let windowObserver {
+            NotificationCenter.default.removeObserver(windowObserver)
         }
     }
 
-    /// Drop empty Untitled windows DocumentGroup may still spawn at launch.
+    // MARK: - Helpers
+
+    private func presentOpenPanelIfIdle() {
+        if openedFromFileEvent { return }
+        if NSDocumentController.shared.documents.contains(where: { $0.fileURL != nil }) { return }
+        if !NSDocumentController.shared.documents.isEmpty { return }
+        guard !didOfferOpenPanel else { return }
+        didOfferOpenPanel = true
+        NSDocumentController.shared.openDocument(self)
+    }
+
     private func closeStrayUntitledDocuments() {
         for document in NSDocumentController.shared.documents {
-            // Only auto-created, never-saved, empty-ish untitled docs.
-            guard document.fileURL == nil, !document.isDocumentEdited else { continue }
+            guard document.fileURL == nil else { continue }
+            // Don't kill a user-created New that already has edits.
+            if document.isDocumentEdited { continue }
+            // If New was just requested, keep it.
+            if let controller = NSDocumentController.shared as? GruMDDocumentController,
+               controller.userInitiatedNew {
+                continue
+            }
             document.close()
         }
+    }
+
+    private func suppressUntitledWindowIfNeeded(_ window: NSWindow?) {
+        guard let window else { return }
+        if let controller = NSDocumentController.shared as? GruMDDocumentController,
+           controller.userInitiatedNew {
+            return
+        }
+        // If every open document is file-backed, leave windows alone.
+        let onlyUntitled = NSDocumentController.shared.documents.allSatisfy { $0.fileURL == nil }
+            && !NSDocumentController.shared.documents.isEmpty
+        let noRealFiles = !NSDocumentController.shared.documents.contains { $0.fileURL != nil }
+
+        if noRealFiles && onlyUntitled || (window.title == "Untitled" && noRealFiles && !openedFromFileEvent) {
+            if isLikelyUntitledDocumentWindow(window) {
+                window.alphaValue = 0
+                window.orderOut(nil)
+            }
+            closeStrayUntitledDocuments()
+        }
+    }
+
+    private func isLikelyUntitledDocumentWindow(_ window: NSWindow) -> Bool {
+        if window.title == "Untitled" { return true }
+        // SwiftUI document windows often have no title yet for a moment.
+        if window.isFloatingPanel { return false }
+        if window.level != .normal { return false }
+        // Avoid killing the Open panel.
+        if window.frameAutosaveName.contains("NSNav") { return false }
+        let className = String(describing: type(of: window))
+        if className.contains("OpenPanel") || className.contains("NSSavePanel") { return false }
+        // If there is no file-backed document, treat normal windows as suppressible at launch.
+        let hasFileDoc = NSDocumentController.shared.documents.contains { $0.fileURL != nil }
+        return !hasFileDoc && !openedFromFileEvent
     }
 }
