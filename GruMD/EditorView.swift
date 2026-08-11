@@ -6,7 +6,7 @@ struct EditorView: View {
     @Binding var document: MarkdownDocument
     var fileURL: URL?
 
-    @AppStorage("defaultLayout") private var defaultLayoutRaw: String = LayoutMode.split.rawValue
+    @AppStorage("defaultLayout") private var defaultLayoutRaw: String = LayoutMode.previewOnly.rawValue
     @AppStorage("previewFontSize") private var previewFontSize: Double = 17
     @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
@@ -16,7 +16,9 @@ struct EditorView: View {
     @AppStorage("previewMaxWidth") private var previewMaxWidth: Double = 42
     @AppStorage("previewLineHeight") private var previewLineHeight: Double = 1.7
 
-    @State private var layout: LayoutMode = .split
+    @State private var layout: LayoutMode = .previewOnly
+
+    private var findAvailable: Bool { layout == .split }
     @State private var didApplyDefaultLayout = false
     @State private var showReloadAlert = false
     @State private var pendingDiskText: String?
@@ -109,10 +111,18 @@ struct EditorView: View {
         .onChange(of: findQuery) { _ in refreshFindMatches(resetIndex: true) }
         .onChange(of: findCaseSensitive) { _ in refreshFindMatches(resetIndex: true) }
         .onChange(of: autoReloadExternal) { _ in rebindWatcher() }
+        .onChange(of: layout) { newLayout in
+            // Find works on the editor text — hide it in Preview-only.
+            if newLayout == .previewOnly {
+                closeFind()
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .grumdShowFind)) { _ in
+            guard findAvailable else { return }
             openFind(replace: false)
         }
         .onReceive(NotificationCenter.default.publisher(for: .grumdShowReplace)) { _ in
+            guard findAvailable else { return }
             openFind(replace: true)
         }
         .onReceive(NotificationCenter.default.publisher(for: .grumdExportHTML)) { _ in
@@ -156,12 +166,20 @@ struct EditorView: View {
             } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(showFindBar ? GruMDTheme.accent : Color.secondary)
+                    .foregroundStyle(
+                        !findAvailable
+                            ? Color.secondary.opacity(0.35)
+                            : (showFindBar ? GruMDTheme.accent : Color.secondary)
+                    )
                     .frame(width: 28, height: 26)
             }
             .buttonStyle(.plain)
-            .help(showFindBar ? "Hide find" : "Find")
-
+            .disabled(!findAvailable)
+            .help(
+                findAvailable
+                    ? (showFindBar ? "Hide find" : "Find")
+                    : "Switch to Split to search in the editor"
+            )
             Spacer(minLength: 8)
             fileTitle
             Spacer(minLength: 8)
@@ -393,7 +411,7 @@ struct EditorView: View {
             if autoReloadExternal {
                 Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
             }
-            Text("GruMD 1.3.1")
+            Text("GruMD 1.3.2")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)
@@ -422,6 +440,7 @@ struct EditorView: View {
     // MARK: - Find
 
     private func toggleFind(replace: Bool) {
+        guard findAvailable else { return }
         if showFindBar && !replace {
             // Magnifier acts as toggle when find is already open.
             closeFind()
@@ -431,6 +450,7 @@ struct EditorView: View {
     }
 
     private func openFind(replace: Bool) {
+        guard findAvailable else { return }
         showFindBar = true
         if replace {
             showReplaceFields = true

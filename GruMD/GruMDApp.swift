@@ -2,6 +2,8 @@ import SwiftUI
 
 @main
 struct GruMDApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+
     var body: some Scene {
         DocumentGroup(newDocument: MarkdownDocument()) { file in
             EditorView(document: file.$document, fileURL: file.fileURL)
@@ -41,7 +43,7 @@ struct GruMDApp: App {
 }
 
 struct SettingsView: View {
-    @AppStorage("defaultLayout") private var defaultLayout: String = LayoutMode.split.rawValue
+    @AppStorage("defaultLayout") private var defaultLayout: String = LayoutMode.previewOnly.rawValue
     @AppStorage("previewFontSize") private var previewFontSize: Double = 17
     @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
@@ -67,7 +69,7 @@ struct SettingsView: View {
                     Text("General")
                 }
                 Section("About") {
-                    LabeledContent("Version", value: "1.3.1")
+                    LabeledContent("Version", value: "1.3.2")
                     LabeledContent("Build", value: "Local Markdown · Offline")
                 }
             }

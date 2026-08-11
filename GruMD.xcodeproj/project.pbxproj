@@ -22,6 +22,7 @@
 		A1000000000000000000000F /* MarkdownOutline.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000000000000000000000F /* MarkdownOutline.swift */; };
 		A10000000000000000000010 /* MarkdownHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* MarkdownHTML.swift */; };
 		A10000000000000000000011 /* PrintSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* PrintSupport.swift */; };
+		A10000000000000000000012 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +44,7 @@
 		A2000000000000000000000F /* MarkdownOutline.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownOutline.swift; sourceTree = "<group>"; };
 		A20000000000000000000010 /* MarkdownHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownHTML.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* PrintSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintSupport.swift; sourceTree = "<group>"; };
+		A20000000000000000000012 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				A20000000000000000000001 /* GruMDApp.swift */,
+				A20000000000000000000012 /* AppDelegate.swift */,
 				A20000000000000000000002 /* MarkdownDocument.swift */,
 				A20000000000000000000003 /* EditorView.swift */,
 				A20000000000000000000004 /* MarkdownPreview.swift */,
@@ -176,6 +179,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000001 /* GruMDApp.swift in Sources */,
+				A10000000000000000000012 /* AppDelegate.swift in Sources */,
 				A10000000000000000000002 /* MarkdownDocument.swift in Sources */,
 				A10000000000000000000003 /* EditorView.swift in Sources */,
 				A10000000000000000000004 /* MarkdownPreview.swift in Sources */,
@@ -239,7 +243,7 @@
 				CODE_SIGN_ENTITLEMENTS = GruMD/GruMD.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -249,7 +253,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.3.1;
+				MARKETING_VERSION = 1.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -265,7 +269,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -275,7 +279,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.3.1;
+				MARKETING_VERSION = 1.3.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

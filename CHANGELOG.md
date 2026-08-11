@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.2] — 2026-08-11
+
+### Behavior
+
+- App launch no longer opens a blank **Untitled** document (shows Open dialog instead; File → New still works)
+- Default layout is **Preview**; switch to **Split** for side‑by‑side editing
+- Find (magnifier / ⌘F) disabled in Preview-only mode (button grayed out)
+
 ## [1.3.1] — 2026-08-11
 
 ### UI
