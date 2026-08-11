@@ -1,24 +1,17 @@
 # Local package output
 
-This folder holds **locally built** DMGs from:
+Built by `./scripts/build_and_package.sh` (gitignored DMGs).
+
+Published versions on GitHub (do not reintroduce deleted intermediate tags):
+
+| Tag | Notes |
+|-----|--------|
+| `v1.3.10` | Current product |
+| `v1.2.0` | Branding milestone |
+| `v1.1.0` | UI milestone |
+| `v1.0.0` | First release |
 
 ```bash
 ./scripts/build_and_package.sh
-```
-
-Files here are **not committed** to git. Users download from **GitHub Releases**:
-
-**https://github.com/liangjiarui-dev/GruMD/releases**
-
-| File (example) | Architecture |
-|----------------|--------------|
-| `GruMD-1.3.0-apple-silicon.dmg` | arm64 |
-| `GruMD-1.3.0-intel.dmg` | x86_64 |
-| `GruMD-1.3.0-universal.dmg` | arm64 + x86_64 |
-
-Publish (or push a `v*` tag to trigger GitHub Actions):
-
-```bash
-./scripts/publish_release.sh 1.3.0
-# or: git tag v1.3.0 && git push origin v1.3.0
+# or: git tag vX.Y.Z && git push origin vX.Y.Z   # triggers Actions release
 ```

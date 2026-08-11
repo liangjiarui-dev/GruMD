@@ -9,7 +9,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Download
 
-**→ [Get the latest release](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
+**→ [Latest release (v1.3.10)](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
 
 | Asset | Machine |
 |-------|---------|
@@ -22,31 +22,31 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 1. Open the DMG → drag **GruMD** into **Applications**.
 2. First launch: if blocked, **right-click → Open → Open**.
 
-## Features (1.3)
+## Features
 
-- Open / edit / save local Markdown
-- Split · Editor · Preview · **Focus** layouts
-- **Find / Replace**, **outline** (H1–H3)
-- **Export HTML**, **Print**
-- **Recent files** welcome strip; drag images to insert paths
-- Offline GFM preview; optional disk reload
-- Typography preferences (editor + preview)
+- Open / edit / save local Markdown (single file)
+- **Preview** (default) and **Split** layouts
+- Find / Replace (in Split), export HTML, print
+- Drag images into the editor → `![](relative path)`
+- Offline GFM preview; optional reload when the file changes on disk
+- Typography preferences
+- TextEdit-style launch (Open panel / open file — no home screen)
 
 ## Requirements
 
 - macOS **13 Ventura** or later
 - Apple Silicon **or** Intel
 
-## Versions
+## Releases (kept)
 
-| Version | Notes |
-|---------|--------|
-| **1.3.5** | **Current** — polished home launcher — no untitled on launch, default Preview, find disabled in Preview
-| 1.3.1 | Split/Preview only, find toggle, larger window |
-| 1.3.0 | Find/replace, export, print, drag images, typography |
-| 1.2.0 | Final Gru icon branding |
-| 1.1.0 | Apple-style UI |
-| 1.0.0 | First release |
+| Version | Role |
+|---------|------|
+| **[1.3.10](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.3.10)** | **Current product** — usable daily build |
+| [1.2.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.2.0) | Branding (final Gru icon) |
+| [1.1.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.1.0) | Apple-style UI |
+| [1.0.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.0.0) | First public release |
+
+Intermediate 1.3.x experiment tags/releases were removed.
 
 See [CHANGELOG.md](CHANGELOG.md).
 
@@ -55,7 +55,7 @@ See [CHANGELOG.md](CHANGELOG.md).
 ```bash
 open GruMD.xcodeproj
 ./scripts/build_and_package.sh
-# or: git tag v1.3.0 && git push origin v1.3.0
+# release: git tag vX.Y.Z && git push origin vX.Y.Z
 ```
 
 ## License
