@@ -4,9 +4,28 @@ Minimal macOS Markdown reader & light editor.
 
 Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins, no AI, no cloud.
 
-![Platform](https://img.shields.io/badge/macOS-13%2B-blue)
-![Arch](https://img.shields.io/badge/arch-arm64%20%7C%20x86__64%20%7C%20universal-lightgrey)
-![License](https://img.shields.io/badge/license-MIT-green)
+[![macOS 13+](https://img.shields.io/badge/macOS-13%2B-blue)](#requirements)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
+## Download
+
+**→ [Get the latest release](https://github.com/OWNER/GruMD/releases/latest)**
+
+On the Releases page, pick the DMG that matches your Mac:
+
+| Asset | Machine |
+|-------|---------|
+| `GruMD-*-apple-silicon.dmg` | Apple Silicon (M1 / M2 / M3 / M4 …) |
+| `GruMD-*-intel.dmg` | Intel Mac |
+| `GruMD-*-universal.dmg` | Either (one file for both) |
+
+### Install
+
+1. Open the DMG → drag **GruMD** into **Applications**.
+2. First launch: if macOS warns about an unidentified developer, **right-click → Open → Open**.  
+   (Builds are ad-hoc signed unless you notarize with a paid Apple Developer ID.)
+
+> **Note for maintainers:** replace `OWNER` in the download link with your GitHub username after creating the repo (or run `./scripts/set_github_owner.sh yourname`).
 
 ## Features
 
@@ -19,50 +38,35 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Requirements
 
-- macOS **13 Ventura** or later  
+- macOS **13 Ventura** or later
 - Apple Silicon **or** Intel
-
-## Install
-
-DMG packages live in [`releases/`](releases/):
-
-| Package | Use when |
-|---------|----------|
-| [`releases/GruMD-1.0.0-apple-silicon.dmg`](releases/GruMD-1.0.0-apple-silicon.dmg) | M-series Mac |
-| [`releases/GruMD-1.0.0-intel.dmg`](releases/GruMD-1.0.0-intel.dmg) | Intel Mac |
-| [`releases/GruMD-1.0.0-universal.dmg`](releases/GruMD-1.0.0-universal.dmg) | Either (one image for both) |
-
-1. Open the DMG → drag **GruMD** into **Applications**.  
-2. First open may need **right-click → Open** (ad-hoc signature, no paid Developer ID).
-
-Details: [releases/README.md](releases/README.md).
 
 ## Build from source
 
 ```bash
-# Xcode 15+ recommended
 open GruMD.xcodeproj
-
-# Or command line (Release for arm64 + intel + universal → DMG only)
+# or package DMGs locally:
 ./scripts/build_and_package.sh
 ```
 
-Artifacts are written to `releases/*.dmg`.
+Local DMGs land in `releases/` (gitignored). To publish them on GitHub:
+
+```bash
+# needs: git remote + GitHub CLI (gh) logged in
+./scripts/publish_release.sh 1.0.0
+```
 
 ## Project layout
 
 ```
 GruMD/
-├── GruMD/                 # App sources & resources
-│   ├── *.swift
-│   ├── Resources/         # marked.min.js, preview.css
-│   ├── Assets.xcassets/
-│   ├── Info.plist
-│   └── GruMD.entitlements
+├── GruMD/                    # App sources & resources
 ├── GruMD.xcodeproj/
 ├── scripts/
-│   └── build_and_package.sh
-├── releases/              # DMG installers only
+│   ├── build_and_package.sh  # → local releases/*.dmg
+│   ├── publish_release.sh    # → GitHub Releases assets
+│   └── set_github_owner.sh   # fix README download links
+├── releases/                 # local DMG output only (not committed)
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
 └── README.md

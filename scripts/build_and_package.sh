@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build GruMD for Apple Silicon, Intel, and Universal.
-# Outputs only .dmg installers under releases/ (no loose .app, no zip).
+# Outputs only .dmg installers under releases/ (gitignored; publish with publish_release.sh).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"

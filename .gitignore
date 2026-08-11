@@ -21,6 +21,13 @@ Icon?
 # Packaging scratch (script temp dirs)
 .package-tmp/
 
+# Local installers (publish via GitHub Releases, do not commit binaries)
+releases/*.dmg
+releases/*.app
+releases/apple-silicon/
+releases/intel/
+releases/universal/
+
 # Optional local secrets
 *.p12
 *.mobileprovision
