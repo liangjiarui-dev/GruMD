@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.7] — 2026-08-11
+
+### UI
+
+- Center launch home card in the window
+- Footer credit: 由 Gru 制作
+
 ## [1.3.6] — 2026-08-11
 
 ### UI

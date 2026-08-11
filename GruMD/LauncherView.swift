@@ -22,15 +22,19 @@ struct LauncherView: View {
         ZStack {
             backgroundLayer
 
-            // Center the whole home card in the window.
-            ScrollView {
-                VStack(spacing: 0) {
-                    homeCard
-                        .frame(maxWidth: 880)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 40)
+            // Vertically + horizontally center the home card.
+            GeometryReader { geo in
+                ScrollView {
+                    VStack {
+                        Spacer(minLength: 0)
+                        homeCard
+                            .frame(maxWidth: 720)
+                            .padding(.horizontal, 32)
+                        Spacer(minLength: 0)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(minHeight: geo.size.height)
                 }
-                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -130,19 +134,16 @@ struct LauncherView: View {
                 }
             }
 
-            // Footer line inside card
-            HStack(spacing: 10) {
-                Text("Single file")
-                bullet
-                Text("GFM preview")
-                bullet
-                Text("Save with ⌘S")
+            // Footer
+            HStack {
+                Text("由 Gru 制作")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundStyle(.secondary)
                 Spacer()
-                Text("v1.3.6")
+                Text("v1.3.7")
+                    .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(.quaternary)
             }
-            .font(.system(size: 11, design: .rounded))
-            .foregroundStyle(.tertiary)
         }
         .padding(28)
         .background {
@@ -154,10 +155,6 @@ struct LauncherView: View {
                 .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
         }
         .shadow(color: .black.opacity(colorScheme == .dark ? 0.35 : 0.08), radius: 24, y: 10)
-    }
-
-    private var bullet: some View {
-        Text("·").foregroundStyle(.quaternary)
     }
 
     private var emptyRecent: some View {
