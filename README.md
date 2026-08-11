@@ -60,7 +60,8 @@ Local DMGs land in `releases/` (gitignored). To publish them on GitHub:
 
 | Version | Notes |
 |---------|--------|
-| **1.1.0** | Apple-style UI refresh, new icon, status bar, reader preview |
+| **1.1.1** | Icon with subtle Gru/Bob nickname wink (classic icon archived) |
+| 1.1.0 | Apple-style UI refresh, status bar, reader preview |
 | 1.0.0 | Initial release |
 
 See [CHANGELOG.md](CHANGELOG.md).

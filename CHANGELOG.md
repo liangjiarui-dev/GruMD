@@ -2,6 +2,14 @@
 
 All notable changes to GruMD are documented here.
 
+## [1.1.1] — 2026-08-11
+
+### Branding
+
+- New shipping app icon: Apple-style MD document with an abstract dual-lens accent (quiet nod to the Gru / Bob nickname vibe — not a character mascot)
+- Previous 1.1 classic icon kept under `docs/icons/app-icon-1.1-classic-1024.png`
+- Alternate chevron + yellow accent variant saved as `docs/icons/app-icon-chevron-gru-1024.png`
+
 ## [1.1.0] — 2026-08-11
 
 Visual redesign and polish release. Functionally compatible with 1.0; package and tag are **v1.1.0**.
