@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.5] — 2026-08-11
+
+### UI
+
+- Polished launch home: two-column layout, action cards, recent list, clear product boundary copy
+
 ## [1.3.4] — 2026-08-11
 
 ### Behavior

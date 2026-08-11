@@ -41,7 +41,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 | Version | Notes |
 |---------|--------|
-| **1.3.2** | **Current** — no untitled on launch, default Preview, find disabled in Preview
+| **1.3.5** | **Current** — polished home launcher — no untitled on launch, default Preview, find disabled in Preview
 | 1.3.1 | Split/Preview only, find toggle, larger window |
 | 1.3.0 | Find/replace, export, print, drag images, typography |
 | 1.2.0 | Final Gru icon branding |
