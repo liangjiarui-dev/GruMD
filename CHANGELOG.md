@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.1] — 2026-08-11
+
+### UI
+
+- Layouts: **Split** and **Preview** only (removed Editor-only and Focus)
+- Removed outline sidebar
+- Find: magnifier toggles open/close; close also via the × control
+- Larger default window size
+
 ## [1.3.0] — 2026-08-11
 
 Better reading and writing — still a single-file local Markdown app.

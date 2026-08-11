@@ -6,7 +6,8 @@ struct GruMDApp: App {
         DocumentGroup(newDocument: MarkdownDocument()) { file in
             EditorView(document: file.$document, fileURL: file.fileURL)
         }
-        .defaultSize(width: 1080, height: 720)
+        // Larger default workspace — not a tiny utility window.
+        .defaultSize(width: 1320, height: 860)
         .commands {
             CommandGroup(after: .textEditing) {
                 Button("Find…") {
@@ -31,18 +32,6 @@ struct GruMDApp: App {
                 }
                 .keyboardShortcut("p", modifiers: [.command])
             }
-
-            CommandMenu("View") {
-                Button("Toggle Outline") {
-                    NotificationCenter.default.post(name: .grumdToggleOutline, object: nil)
-                }
-                .keyboardShortcut("o", modifiers: [.command, .option])
-
-                Button("Focus Preview") {
-                    NotificationCenter.default.post(name: .grumdFocusPreview, object: nil)
-                }
-                .keyboardShortcut("f", modifiers: [.command, .shift])
-            }
         }
 
         Settings {
@@ -57,7 +46,6 @@ struct SettingsView: View {
     @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
     @AppStorage("showStatusBar") private var showStatusBar: Bool = true
-    @AppStorage("showOutline") private var showOutline: Bool = false
     @AppStorage("editorMono") private var editorMono: Bool = true
     @AppStorage("editorLineWrapping") private var editorLineWrapping: Bool = true
     @AppStorage("previewMaxWidth") private var previewMaxWidth: Double = 42
@@ -74,19 +62,18 @@ struct SettingsView: View {
                         }
                     }
                     Toggle("Show status bar", isOn: $showStatusBar)
-                    Toggle("Show outline by default", isOn: $showOutline)
                     Toggle("Reload when file changes on disk", isOn: $autoReloadExternal)
                 } header: {
                     Text("General")
                 }
                 Section("About") {
-                    LabeledContent("Version", value: "1.3.0")
+                    LabeledContent("Version", value: "1.3.1")
                     LabeledContent("Build", value: "Local Markdown · Offline")
                 }
             }
             .formStyle(.grouped)
             .padding()
-            .frame(width: 480, height: 360)
+            .frame(width: 480, height: 320)
             .tabItem { Label("General", systemImage: "gearshape") }
 
             Form {
@@ -111,7 +98,7 @@ struct SettingsView: View {
             }
             .formStyle(.grouped)
             .padding()
-            .frame(width: 480, height: 320)
+            .frame(width: 480, height: 300)
             .tabItem { Label("Editor", systemImage: "square.and.pencil") }
 
             Form {

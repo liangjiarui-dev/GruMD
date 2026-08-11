@@ -11,7 +11,6 @@ struct EditorView: View {
     @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
     @AppStorage("showStatusBar") private var showStatusBar: Bool = true
-    @AppStorage("showOutline") private var showOutline: Bool = false
     @AppStorage("editorMono") private var editorMono: Bool = true
     @AppStorage("editorLineWrapping") private var editorLineWrapping: Bool = true
     @AppStorage("previewMaxWidth") private var previewMaxWidth: Double = 42
@@ -52,9 +51,6 @@ struct EditorView: View {
         document.text.count
     }
 
-    private var outlineItems: [OutlineItem] {
-        MarkdownOutline.items(in: document.text)
-    }
 
     private var recentURLs: [URL] {
         NSDocumentController.shared.recentDocumentURLs.filter {
@@ -68,10 +64,8 @@ struct EditorView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            if layout != .focus {
-                chromeBar
-            }
-            if showFindBar && layout != .focus && layout != .previewOnly {
+            chromeBar
+            if showFindBar && layout != .previewOnly {
                 FindReplaceBar(
                     query: $findQuery,
                     replacement: $replaceText,
@@ -88,14 +82,14 @@ struct EditorView: View {
             }
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showStatusBar && layout != .focus {
+            if showStatusBar {
                 statusBar
             }
         }
         .background(GruMDTheme.windowBackground)
         .onAppear {
             if !didApplyDefaultLayout {
-                layout = LayoutMode(rawValue: defaultLayoutRaw) ?? .split
+                layout = LayoutMode.resolved(defaultLayoutRaw)
                 didApplyDefaultLayout = true
             }
             lastKnownTextOnDisk = document.text
@@ -126,12 +120,6 @@ struct EditorView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .grumdPrint)) { _ in
             printDocument()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .grumdToggleOutline)) { _ in
-            showOutline.toggle()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .grumdFocusPreview)) { _ in
-            withAnimation { layout = .focus }
         }
         .alert("File Changed on Disk", isPresented: $showReloadAlert) {
             Button("Reload from Disk", role: .destructive) {
@@ -164,18 +152,7 @@ struct EditorView: View {
             layoutControl
 
             Button {
-                showOutline.toggle()
-            } label: {
-                Image(systemName: "list.bullet.indent")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(showOutline ? GruMDTheme.accent : Color.secondary)
-                    .frame(width: 28, height: 26)
-            }
-            .buttonStyle(.plain)
-            .help("Toggle outline")
-
-            Button {
-                openFind(replace: false)
+                toggleFind(replace: false)
             } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 13, weight: .semibold))
@@ -183,7 +160,7 @@ struct EditorView: View {
                     .frame(width: 28, height: 26)
             }
             .buttonStyle(.plain)
-            .help("Find")
+            .help(showFindBar ? "Hide find" : "Find")
 
             Spacer(minLength: 8)
             fileTitle
@@ -271,17 +248,7 @@ struct EditorView: View {
 
     @ViewBuilder
     private var content: some View {
-        HStack(spacing: 0) {
-            if showOutline && layout != .focus {
-                outlineSidebar
-                    .frame(width: 200)
-                Rectangle()
-                    .fill(Color.primary.opacity(0.08))
-                    .frame(width: 0.5)
-            }
-
-            mainWorkspace
-        }
+        mainWorkspace
     }
 
     @ViewBuilder
@@ -289,12 +256,10 @@ struct EditorView: View {
         switch layout {
         case .split:
             HSplitView {
-                editorColumn.frame(minWidth: 240)
-                previewColumn.frame(minWidth: 260)
+                editorColumn.frame(minWidth: 280)
+                previewColumn.frame(minWidth: 300)
             }
-        case .editorOnly:
-            editorColumn
-        case .previewOnly, .focus:
+        case .previewOnly:
             previewColumn
         }
     }
@@ -304,9 +269,7 @@ struct EditorView: View {
             if showsWelcomeChrome {
                 welcomeStrip
             }
-            if layout != .focus {
-                paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
-            }
+            paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
             TextEditor(text: $document.text)
                 .font(editorFont)
                 .scrollContentBackground(.hidden)
@@ -328,23 +291,7 @@ struct EditorView: View {
 
     private var previewColumn: some View {
         VStack(spacing: 0) {
-            if layout != .focus {
-                paneHeader(title: layout == .focus ? "Focus" : "Preview", systemImage: "eye")
-            } else {
-                HStack {
-                    Text("Focus Preview")
-                        .font(GruMDTheme.paneLabel)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Exit Focus") {
-                        withAnimation { layout = .split }
-                    }
-                    .controlSize(.small)
-                }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .background(.ultraThinMaterial)
-            }
+            paneHeader(title: "Preview", systemImage: "eye")
             MarkdownPreview(
                 markdown: document.text,
                 baseURL: fileURL?.deletingLastPathComponent(),
@@ -357,53 +304,6 @@ struct EditorView: View {
             .background(GruMDTheme.contentBackground)
             .accessibilityLabel("Markdown preview")
         }
-    }
-
-    private var outlineSidebar: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("OUTLINE")
-                    .font(GruMDTheme.paneLabel)
-                    .foregroundStyle(.secondary)
-                    .tracking(0.6)
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-
-            if outlineItems.isEmpty {
-                Text("No headings")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
-                    .padding(12)
-                Spacer()
-            } else {
-                List(outlineItems) { item in
-                    Button {
-                        // Best-effort: jump by rewriting is not ideal; show line in status via find hint
-                        findLineHint = item.lineIndex + 1
-                        // Insert nothing — scroll not available on TextEditor; copy line into find for visibility
-                        if layout == .previewOnly || layout == .focus {
-                            layout = .split
-                        }
-                    } label: {
-                        HStack(spacing: 6) {
-                            Text(String(repeating: "  ", count: item.level - 1) + item.title)
-                                .font(.system(size: 12, design: .rounded))
-                                .lineLimit(1)
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            Text("L\(item.lineIndex + 1)")
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
-                    .buttonStyle(.plain)
-                }
-                .listStyle(.sidebar)
-            }
-        }
-        .background(Color(nsColor: .controlBackgroundColor).opacity(0.35))
     }
 
     private var welcomeStrip: some View {
@@ -493,7 +393,7 @@ struct EditorView: View {
             if autoReloadExternal {
                 Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
             }
-            Text("GruMD 1.3")
+            Text("GruMD 1.3.1")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)
@@ -521,9 +421,20 @@ struct EditorView: View {
 
     // MARK: - Find
 
+    private func toggleFind(replace: Bool) {
+        if showFindBar && !replace {
+            // Magnifier acts as toggle when find is already open.
+            closeFind()
+            return
+        }
+        openFind(replace: replace)
+    }
+
     private func openFind(replace: Bool) {
         showFindBar = true
-        showReplaceFields = replace
+        if replace {
+            showReplaceFields = true
+        }
         refreshFindMatches(resetIndex: true)
     }
 
@@ -739,6 +650,4 @@ extension Notification.Name {
     static let grumdShowReplace = Notification.Name("grumdShowReplace")
     static let grumdExportHTML = Notification.Name("grumdExportHTML")
     static let grumdPrint = Notification.Name("grumdPrint")
-    static let grumdToggleOutline = Notification.Name("grumdToggleOutline")
-    static let grumdFocusPreview = Notification.Name("grumdFocusPreview")
 }
