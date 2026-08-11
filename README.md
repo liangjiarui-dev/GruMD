@@ -22,18 +22,17 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 - macOS **13 Ventura** or later  
 - Apple Silicon **or** Intel
 
-## Install (friends / daily use)
+## Install
 
-Pre-built apps live in [`releases/`](releases/):
+DMG packages live in [`releases/`](releases/):
 
 | Package | Use when |
 |---------|----------|
-| [`releases/apple-silicon/GruMD.app`](releases/apple-silicon/) | M-series Mac |
-| [`releases/intel/GruMD.app`](releases/intel/) | Intel Mac |
-| [`releases/universal/GruMD.app`](releases/universal/) | Either (one binary for both) |
-| [`releases/GruMD-1.0.0-universal.dmg`](releases/GruMD-1.0.0-universal.dmg) | Prefer a classic DMG installer |
+| [`releases/GruMD-1.0.0-apple-silicon.dmg`](releases/GruMD-1.0.0-apple-silicon.dmg) | M-series Mac |
+| [`releases/GruMD-1.0.0-intel.dmg`](releases/GruMD-1.0.0-intel.dmg) | Intel Mac |
+| [`releases/GruMD-1.0.0-universal.dmg`](releases/GruMD-1.0.0-universal.dmg) | Either (one image for both) |
 
-1. Drag `GruMD.app` into **Applications**.  
+1. Open the DMG → drag **GruMD** into **Applications**.  
 2. First open may need **right-click → Open** (ad-hoc signature, no paid Developer ID).
 
 Details: [releases/README.md](releases/README.md).
@@ -44,11 +43,11 @@ Details: [releases/README.md](releases/README.md).
 # Xcode 15+ recommended
 open GruMD.xcodeproj
 
-# Or command line (Release for arm64 + intel + universal + DMG)
+# Or command line (Release for arm64 + intel + universal → DMG only)
 ./scripts/build_and_package.sh
 ```
 
-Artifacts are written to `releases/`.
+Artifacts are written to `releases/*.dmg`.
 
 ## Project layout
 
@@ -63,7 +62,7 @@ GruMD/
 ├── GruMD.xcodeproj/
 ├── scripts/
 │   └── build_and_package.sh
-├── releases/              # Install packages (.app + .dmg)
+├── releases/              # DMG installers only
 ├── LICENSE
 ├── THIRD_PARTY_NOTICES.md
 └── README.md

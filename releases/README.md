@@ -1,19 +1,19 @@
 # Install packages
 
-Pre-built macOS apps for **GruMD 1.0.0**. Pick one folder (or the DMG).
+Pre-built **DMG** installers for **GruMD 1.0.0**. No loose `.app` folders — open a DMG and drag the app into Applications.
 
-| Path | Who should use it |
+| File | Who should use it |
 |------|-------------------|
-| `apple-silicon/GruMD.app` | M1 / M2 / M3 / M4 Macs |
-| `intel/GruMD.app` | Intel Macs |
-| `universal/GruMD.app` | Works on both (slightly larger) |
-| `GruMD-1.0.0-universal.dmg` | Drag-to-Applications installer (Universal) |
+| `GruMD-1.0.0-apple-silicon.dmg` | M1 / M2 / M3 / M4 Macs |
+| `GruMD-1.0.0-intel.dmg` | Intel Macs |
+| `GruMD-1.0.0-universal.dmg` | Works on both (slightly larger) |
 
 ## Install
 
-1. Open the matching folder (or the DMG).
-2. Drag **GruMD.app** into **Applications**.
-3. First launch: if macOS says the developer cannot be verified, **right-click → Open → Open**.
+1. Double-click the matching `.dmg`.
+2. Drag **GruMD** into **Applications**.
+3. Eject the disk image.
+4. First launch: if macOS says the developer cannot be verified, **right-click → Open → Open**.
 
 These builds are ad-hoc signed (no paid Apple Developer ID). That is normal for personal / friend distribution. See the root [README](../README.md).
 
@@ -23,4 +23,4 @@ These builds are ad-hoc signed (no paid Apple Developer ID). That is normal for 
 ./scripts/build_and_package.sh
 ```
 
-Outputs refresh this directory (`.app` + `.dmg` only — no zip).
+Outputs only `.dmg` files into this directory.

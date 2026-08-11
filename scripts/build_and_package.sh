@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Build GruMD for Apple Silicon, Intel, and Universal.
-# Outputs standard .app bundles + a Universal DMG under releases/ (no zip).
+# Outputs only .dmg installers under releases/ (no loose .app, no zip).
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -13,7 +13,7 @@ VERSION="1.0.0"
 rm -rf "$TMP"
 mkdir -p "$TMP" "$RELEASES"
 
-# Echo path only on stdout; logs go to stderr so command substitution stays clean.
+# Path only on stdout; logs on stderr.
 build_arch() {
   local target_arch="$1"
   local out="$TMP/${target_arch}"
@@ -41,60 +41,61 @@ build_arch() {
   printf '%s\n' "$app"
 }
 
+make_dmg() {
+  local app_path="$1"
+  local dmg_name="$2"
+  local dmg_src="$TMP/dmg_${dmg_name}"
+  local dmg_out="$RELEASES/${dmg_name}.dmg"
+
+  rm -rf "$dmg_src"
+  mkdir -p "$dmg_src"
+  cp -R "$app_path" "$dmg_src/GruMD.app"
+  ln -sf /Applications "$dmg_src/Applications"
+
+  codesign --force --deep --sign - "$dmg_src/GruMD.app" 2>/dev/null || true
+
+  echo "==> Creating ${dmg_name}.dmg..." >&2
+  rm -f "$dmg_out"
+  hdiutil create \
+    -volname "GruMD" \
+    -srcfolder "$dmg_src" \
+    -ov -format UDZO \
+    "$dmg_out" >/dev/null
+}
+
 ARM_APP="$(build_arch arm64)"
 X86_APP="$(build_arch x86_64)"
 
-echo "==> Staging releases..."
-rm -rf \
-  "$RELEASES/apple-silicon" \
-  "$RELEASES/intel" \
-  "$RELEASES/universal" \
-  "$RELEASES/GruMD-${VERSION}-universal.dmg"
-
-mkdir -p \
-  "$RELEASES/apple-silicon" \
-  "$RELEASES/intel" \
-  "$RELEASES/universal"
-
-cp -R "$ARM_APP" "$RELEASES/apple-silicon/GruMD.app"
-cp -R "$X86_APP" "$RELEASES/intel/GruMD.app"
-
-# Universal
-cp -R "$ARM_APP" "$RELEASES/universal/GruMD.app"
+# Universal binary
+UNI_APP="$TMP/universal/GruMD.app"
+mkdir -p "$TMP/universal"
+cp -R "$ARM_APP" "$UNI_APP"
 lipo -create \
   "$ARM_APP/Contents/MacOS/GruMD" \
   "$X86_APP/Contents/MacOS/GruMD" \
-  -output "$RELEASES/universal/GruMD.app/Contents/MacOS/GruMD"
+  -output "$UNI_APP/Contents/MacOS/GruMD"
+codesign --force --deep --sign - "$UNI_APP" 2>/dev/null || true
 
-for app in \
-  "$RELEASES/apple-silicon/GruMD.app" \
-  "$RELEASES/intel/GruMD.app" \
-  "$RELEASES/universal/GruMD.app"; do
-  codesign --force --deep --sign - "$app" 2>/dev/null || true
-done
+echo "==> Cleaning old release products..."
+rm -rf \
+  "$RELEASES/apple-silicon" \
+  "$RELEASES/intel" \
+  "$RELEASES/universal"
+rm -f "$RELEASES"/*.dmg
 
-# DMG (Universal only)
-echo "==> Creating DMG..."
-DMG_SRC="$TMP/dmg_src"
-mkdir -p "$DMG_SRC"
-cp -R "$RELEASES/universal/GruMD.app" "$DMG_SRC/"
-ln -sf /Applications "$DMG_SRC/Applications"
-hdiutil create \
-  -volname "GruMD" \
-  -srcfolder "$DMG_SRC" \
-  -ov -format UDZO \
-  "$RELEASES/GruMD-${VERSION}-universal.dmg" >/dev/null
+make_dmg "$ARM_APP" "GruMD-${VERSION}-apple-silicon"
+make_dmg "$X86_APP" "GruMD-${VERSION}-intel"
+make_dmg "$UNI_APP" "GruMD-${VERSION}-universal"
 
 rm -rf "$TMP"
 
 echo
-echo "==> Architectures"
-echo -n "  apple-silicon: "; lipo -info "$RELEASES/apple-silicon/GruMD.app/Contents/MacOS/GruMD"
-echo -n "  intel:         "; lipo -info "$RELEASES/intel/GruMD.app/Contents/MacOS/GruMD"
-echo -n "  universal:     "; lipo -info "$RELEASES/universal/GruMD.app/Contents/MacOS/GruMD"
+echo "==> Architectures (from temp build — packages are DMG only)"
+echo "  apple-silicon: arm64"
+echo "  intel:         x86_64"
+echo "  universal:     arm64 + x86_64"
 echo
-echo "==> Releases layout"
-find "$RELEASES" \( -name 'GruMD.app' -o -name '*.dmg' -o -name 'README.md' \) | sort
-du -sh "$RELEASES"/* 2>/dev/null || true
+echo "==> Releases"
+ls -lh "$RELEASES"/*.dmg
 echo
-echo "Done. Install packages are under: $RELEASES"
+echo "Done. DMG installers are under: $RELEASES"
