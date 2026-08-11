@@ -3,7 +3,7 @@ import AppKit
 import UniformTypeIdentifiers
 
 /// Full-window home screen when no file is open.
-/// Stays inside product boundaries: local files only, no vault / cloud / AI.
+/// Layout: one centered card — never dump content at the window bottom.
 struct LauncherView: View {
     var onOpen: () -> Void
     var onNew: () -> Void
@@ -22,47 +22,15 @@ struct LauncherView: View {
         ZStack {
             backgroundLayer
 
-            VStack(spacing: 0) {
-                // Top bar
-                HStack {
-                    Text("LOCAL · OFFLINE")
-                        .font(.system(size: 10, weight: .semibold, design: .rounded))
-                        .tracking(1.2)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background {
-                            Capsule(style: .continuous)
-                                .fill(Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
-                        }
-                    Spacer()
+            // Center the whole home card in the window.
+            ScrollView {
+                VStack(spacing: 0) {
+                    homeCard
+                        .frame(maxWidth: 880)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 40)
                 }
-                .padding(.horizontal, 28)
-                .padding(.top, 20)
-
-                Spacer(minLength: 24)
-
-                // Main content: two columns when wide enough
-                ViewThatFits(in: .horizontal) {
-                    HStack(alignment: .top, spacing: 40) {
-                        heroColumn
-                            .frame(maxWidth: 340, alignment: .leading)
-                        recentColumn
-                            .frame(maxWidth: 380)
-                    }
-                    .padding(.horizontal, 48)
-
-                    VStack(spacing: 32) {
-                        heroColumn
-                        recentColumn
-                            .frame(maxWidth: 440)
-                    }
-                    .padding(.horizontal, 36)
-                }
-
-                Spacer(minLength: 24)
-
-                footer
+                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -74,236 +42,208 @@ struct LauncherView: View {
         }
     }
 
-    // MARK: - Layers
+    // MARK: - Card
 
-    private var backgroundLayer: some View {
-        ZStack {
-            GruMDTheme.windowBackground
-
-            // Soft accent wash (top-leading), Apple-like restraint
-            RadialGradient(
-                colors: [
-                    GruMDTheme.accent.opacity(colorScheme == .dark ? 0.18 : 0.10),
-                    Color.clear
-                ],
-                center: .topLeading,
-                startRadius: 20,
-                endRadius: 420
-            )
-            .ignoresSafeArea()
-
-            RadialGradient(
-                colors: [
-                    Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03),
-                    Color.clear
-                ],
-                center: .bottomTrailing,
-                startRadius: 10,
-                endRadius: 360
-            )
-            .ignoresSafeArea()
-        }
-    }
-
-    private var heroColumn: some View {
-        VStack(alignment: .leading, spacing: 22) {
+    private var homeCard: some View {
+        VStack(alignment: .leading, spacing: 28) {
+            // Header row
             HStack(alignment: .center, spacing: 16) {
                 Image(nsImage: NSApp.applicationIconImage)
                     .resizable()
-                    .frame(width: 72, height: 72)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.45 : 0.15), radius: 14, y: 8)
+                    .frame(width: 64, height: 64)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.4 : 0.12), radius: 10, y: 4)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("GruMD")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                    HStack(spacing: 10) {
+                        Text("GruMD")
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                        Text("LOCAL")
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .tracking(0.8)
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background {
+                                Capsule(style: .continuous)
+                                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.06))
+                            }
+                    }
                     Text("Markdown, kept local.")
                         .font(.system(size: 14, weight: .medium, design: .rounded))
                         .foregroundStyle(.secondary)
                 }
+
+                Spacer(minLength: 8)
             }
 
-            Text("Read and lightly edit a single `.md` file. No knowledge base, no plugins, no AI, no cloud.")
+            Text("Open a single `.md` file on this Mac. No knowledge base, no plugins, no AI, no cloud.")
                 .font(.system(size: 13.5, design: .rounded))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-                .lineSpacing(3)
 
-            VStack(spacing: 10) {
-                actionCard(
+            // Actions — always visible, full width of card
+            HStack(spacing: 12) {
+                actionButton(
                     title: "Open File…",
-                    subtitle: "Choose a Markdown file on this Mac",
+                    subtitle: "⌘O",
                     systemImage: "folder.fill",
                     prominent: true,
-                    shortcut: "⌘O",
                     action: onOpen
                 )
-                actionCard(
+                actionButton(
                     title: "New Document",
-                    subtitle: "Blank file — write, then save where you want",
+                    subtitle: "⌘N",
                     systemImage: "doc.badge.plus",
                     prominent: false,
-                    shortcut: "⌘N",
                     action: onNew
                 )
             }
-            .padding(.top, 4)
 
-            // Boundary reminders as quiet chips
-            HStack(spacing: 8) {
-                boundaryChip("Single file")
-                boundaryChip("GFM preview")
-                boundaryChip("Save with ⌘S")
-            }
-            .padding(.top, 4)
-        }
-    }
+            Divider().opacity(0.5)
 
-    private var recentColumn: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
+            // Recent
+            VStack(alignment: .leading, spacing: 12) {
                 Text("Recent")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                Spacer()
-                if !recentURLs.isEmpty {
-                    Text("\(min(recentURLs.count, 10)) files")
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(.tertiary)
-                }
-            }
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.secondary)
 
-            if recentURLs.isEmpty {
-                emptyRecentCard
-            } else {
-                VStack(spacing: 0) {
-                    ForEach(Array(recentURLs.prefix(10).enumerated()), id: \.offset) { index, url in
-                        recentRow(url)
-                        if index < min(recentURLs.count, 10) - 1 {
-                            Divider()
-                                .padding(.leading, 44)
+                if recentURLs.isEmpty {
+                    emptyRecent
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Array(recentURLs.prefix(8).enumerated()), id: \.offset) { index, url in
+                            recentRow(url)
+                            if index < min(recentURLs.count, 8) - 1 {
+                                Divider().padding(.leading, 44)
+                            }
                         }
                     }
+                    .background {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
+                    }
                 }
-                .background {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.5)
-                }
-                .shadow(color: .black.opacity(colorScheme == .dark ? 0.25 : 0.06), radius: 16, y: 6)
             }
-        }
-    }
 
-    private var emptyRecentCard: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(.tertiary)
-            Text("No recent files yet")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.secondary)
-            Text("Files you open will show up here for quick access.")
-                .font(.system(size: 12, design: .rounded))
-                .foregroundStyle(.tertiary)
-                .multilineTextAlignment(.center)
+            // Footer line inside card
+            HStack(spacing: 10) {
+                Text("Single file")
+                bullet
+                Text("GFM preview")
+                bullet
+                Text("Save with ⌘S")
+                Spacer()
+                Text("v1.3.6")
+                    .foregroundStyle(.quaternary)
+            }
+            .font(.system(size: 11, design: .rounded))
+            .foregroundStyle(.tertiary)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 36)
-        .padding(.horizontal, 20)
+        .padding(28)
         .background {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
                 .fill(.ultraThinMaterial)
         }
         .overlay {
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.07), lineWidth: 0.5)
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.35 : 0.08), radius: 24, y: 10)
+    }
+
+    private var bullet: some View {
+        Text("·").foregroundStyle(.quaternary)
+    }
+
+    private var emptyRecent: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "clock")
+                .font(.system(size: 16, weight: .regular))
+                .foregroundStyle(.tertiary)
+            Text("No recent files — open a Markdown document to see it here.")
+                .font(.system(size: 12.5, design: .rounded))
+                .foregroundStyle(.tertiary)
+            Spacer()
+        }
+        .padding(14)
+        .background {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
+        }
+        .overlay {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
         }
     }
 
-    private var footer: some View {
-        HStack(spacing: 16) {
-            Text("Local files only")
-            Text("·")
-                .foregroundStyle(.quaternary)
-            Text("No account")
-            Text("·")
-                .foregroundStyle(.quaternary)
-            Text("v1.3.5")
+    private var backgroundLayer: some View {
+        ZStack {
+            GruMDTheme.windowBackground
+            RadialGradient(
+                colors: [
+                    GruMDTheme.accent.opacity(colorScheme == .dark ? 0.14 : 0.08),
+                    Color.clear
+                ],
+                center: UnitPoint(x: 0.15, y: 0.1),
+                startRadius: 10,
+                endRadius: 480
+            )
+            .ignoresSafeArea()
         }
-        .font(.system(size: 11, design: .rounded))
-        .foregroundStyle(.tertiary)
-        .padding(.bottom, 18)
     }
 
-    // MARK: - Pieces
+    // MARK: - Controls
 
-    private func actionCard(
+    private func actionButton(
         title: String,
         subtitle: String,
         systemImage: String,
         prominent: Bool,
-        shortcut: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundStyle(prominent ? Color.white : GruMDTheme.accent)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 32, height: 32)
                     .background {
-                        RoundedRectangle(cornerRadius: 9, style: .continuous)
-                            .fill(prominent ? Color.white.opacity(0.2) : GruMDTheme.accent.opacity(0.12))
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(prominent ? Color.white.opacity(0.18) : GruMDTheme.accent.opacity(0.12))
                     }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 1) {
                     Text(title)
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                         .foregroundStyle(prominent ? Color.white : Color.primary)
                     Text(subtitle)
-                        .font(.system(size: 11.5, design: .rounded))
-                        .foregroundStyle(prominent ? Color.white.opacity(0.85) : Color.secondary)
-                        .lineLimit(2)
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(prominent ? Color.white.opacity(0.75) : Color.secondary)
                 }
 
-                Spacer(minLength: 8)
-
-                Text(shortcut)
-                    .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(prominent ? Color.white.opacity(0.7) : Color.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background {
-                        Capsule(style: .continuous)
-                            .fill(prominent ? Color.white.opacity(0.15) : Color.primary.opacity(0.06))
-                    }
+                Spacer(minLength: 0)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .background {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(prominent ? GruMDTheme.accent : Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.04))
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(prominent ? GruMDTheme.accent : Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
             }
             .overlay {
                 if !prominent {
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5)
                 }
             }
-            .shadow(
-                color: prominent ? GruMDTheme.accent.opacity(0.35) : .clear,
-                radius: 10,
-                y: 4
-            )
         }
         .buttonStyle(.plain)
-        .keyboardShortcut(
-            KeyEquivalent(shortcut.contains("O") ? "o" : "n"),
-            modifiers: [.command]
-        )
+        .keyboardShortcut(KeyEquivalent(subtitle.contains("O") ? "o" : "n"), modifiers: [.command])
     }
 
     private func recentRow(_ url: URL) -> some View {
@@ -313,7 +253,7 @@ struct LauncherView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "doc.richtext.fill")
-                    .font(.system(size: 14))
+                    .font(.system(size: 13))
                     .foregroundStyle(GruMDTheme.accent)
                     .frame(width: 28, height: 28)
                     .background {
@@ -343,8 +283,7 @@ struct LauncherView: View {
             .padding(.vertical, 10)
             .background {
                 if hoveredRecent == key {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.primary.opacity(colorScheme == .dark ? 0.1 : 0.05))
+                    Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.04)
                 }
             }
             .contentShape(Rectangle())
@@ -353,18 +292,5 @@ struct LauncherView: View {
         .onHover { hovering in
             hoveredRecent = hovering ? key : (hoveredRecent == key ? nil : hoveredRecent)
         }
-    }
-
-    private func boundaryChip(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .medium, design: .rounded))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background {
-                Capsule(style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5)
-                    .background(Capsule(style: .continuous).fill(Color.primary.opacity(0.03)))
-            }
     }
 }

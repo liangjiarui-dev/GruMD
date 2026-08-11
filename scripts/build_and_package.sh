@@ -8,7 +8,7 @@ RELEASES="$ROOT/releases"
 TMP="$ROOT/.package-tmp"
 PROJECT="$ROOT/GruMD.xcodeproj"
 SCHEME="GruMD"
-VERSION="1.3.5"
+VERSION="1.3.6"
 
 rm -rf "$TMP"
 mkdir -p "$TMP" "$RELEASES"

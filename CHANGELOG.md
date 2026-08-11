@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.6] — 2026-08-11
+
+### UI
+
+- Fix launch home layout: single centered card, Open/New always visible (no bottom-crushed layout)
+
 ## [1.3.5] — 2026-08-11
 
 ### UI
