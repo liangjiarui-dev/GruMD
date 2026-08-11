@@ -2,13 +2,20 @@
 
 All notable changes to GruMD are documented here.
 
+## [1.1.2] — 2026-08-11
+
+### Branding
+
+- **Icon redo (readable nickname):** MD document + large one-eyed yellow Bob-style face badge (obvious on purpose)
+- Previous subtle dual-lens icon kept as archive; classic document icon still archived
+- Alternates in `docs/icons/`: Gru mascot version, Bob circle-badge version
+
 ## [1.1.1] — 2026-08-11
 
 ### Branding
 
-- New shipping app icon: Apple-style MD document with an abstract dual-lens accent (quiet nod to the Gru / Bob nickname vibe — not a character mascot)
-- Previous 1.1 classic icon kept under `docs/icons/app-icon-1.1-classic-1024.png`
-- Alternate chevron + yellow accent variant saved as `docs/icons/app-icon-chevron-gru-1024.png`
+- First nickname icon attempt (abstract dual-lens) — later replaced in 1.1.2 as too subtle
+- Classic 1.1 document icon kept under `docs/icons/app-icon-1.1-classic-1024.png`
 
 ## [1.1.0] — 2026-08-11
 
