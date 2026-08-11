@@ -23,7 +23,6 @@
 		A10000000000000000000010 /* MarkdownHTML.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* MarkdownHTML.swift */; };
 		A10000000000000000000011 /* PrintSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* PrintSupport.swift */; };
 		A10000000000000000000012 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000012 /* AppDelegate.swift */; };
-		A10000000000000000000013 /* LauncherView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000013 /* LauncherView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,7 +45,6 @@
 		A20000000000000000000010 /* MarkdownHTML.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkdownHTML.swift; sourceTree = "<group>"; };
 		A20000000000000000000011 /* PrintSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrintSupport.swift; sourceTree = "<group>"; };
 		A20000000000000000000012 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		A20000000000000000000013 /* LauncherView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LauncherView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,7 +77,6 @@
 				A20000000000000000000005 /* FileWatcher.swift */,
 				A20000000000000000000006 /* LayoutMode.swift */,
 				A2000000000000000000000C /* Theme.swift */,
-				A20000000000000000000013 /* LauncherView.swift */,
 				A20000000000000000000011 /* PrintSupport.swift */,
 				A20000000000000000000010 /* MarkdownHTML.swift */,
 				A2000000000000000000000F /* MarkdownOutline.swift */,
@@ -189,7 +186,6 @@
 				A10000000000000000000005 /* FileWatcher.swift in Sources */,
 				A10000000000000000000006 /* LayoutMode.swift in Sources */,
 				A1000000000000000000000C /* Theme.swift in Sources */,
-				A10000000000000000000013 /* LauncherView.swift in Sources */,
 				A10000000000000000000011 /* PrintSupport.swift in Sources */,
 				A10000000000000000000010 /* MarkdownHTML.swift in Sources */,
 				A1000000000000000000000F /* MarkdownOutline.swift in Sources */,
@@ -247,7 +243,7 @@
 				CODE_SIGN_ENTITLEMENTS = GruMD/GruMD.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -257,7 +253,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.3.8;
+				MARKETING_VERSION = 1.3.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -273,7 +269,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 14;
+				CURRENT_PROJECT_VERSION = 15;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -283,7 +279,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 13.0;
-				MARKETING_VERSION = 1.3.8;
+				MARKETING_VERSION = 1.3.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.grumd.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

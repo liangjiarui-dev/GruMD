@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.9] — 2026-08-11
+
+### Behavior
+
+- TextEdit-style launch: no home screen
+- Cold start without a file → Open panel only
+- Open a `.md` with GruMD → that document only (no extra launcher window)
+- File → New still creates a blank Untitled when you ask
+
 ## [1.3.8] — 2026-08-11
 
 ### UI

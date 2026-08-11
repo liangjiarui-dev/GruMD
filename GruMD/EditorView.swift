@@ -38,8 +38,6 @@ struct EditorView: View {
 
     @State private var dropTargeted = false
     @State private var exportError: String?
-    /// Untitled window shows the launcher until the user chooses New or opens a file.
-    @State private var isComposingNew = false
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -55,26 +53,8 @@ struct EditorView: View {
         document.text.count
     }
 
-    /// Home screen instead of an empty Untitled Markdown document.
-    private var showsLauncher: Bool {
-        fileURL == nil && !isComposingNew
-    }
-
     var body: some View {
-        Group {
-            if showsLauncher {
-                LauncherView(
-                    onOpen: openPanel,
-                    onNew: {
-                        isComposingNew = true
-                        document.text = ""
-                    },
-                    onOpenRecent: openRecent
-                )
-            } else {
-                documentWorkspace
-            }
-        }
+        documentWorkspace
         .background(GruMDTheme.windowBackground)
         .onAppear {
             if !didApplyDefaultLayout {
@@ -83,17 +63,11 @@ struct EditorView: View {
             }
             lastKnownTextOnDisk = document.text
             rebindWatcher()
-            if fileURL != nil {
-                isComposingNew = false
-            }
         }
         .onDisappear { watcherBox.watcher.stop() }
         .onChange(of: fileURL?.path) { _ in
             lastKnownTextOnDisk = document.text
             rebindWatcher()
-            if fileURL != nil {
-                isComposingNew = false
-            }
         }
         .onChange(of: document.text) { newValue in
             if newValue == lastKnownTextOnDisk {
@@ -148,7 +122,6 @@ struct EditorView: View {
         }
     }
 
-    /// Editor + preview chrome (only after Open / New).
     private var documentWorkspace: some View {
         VStack(spacing: 0) {
             chromeBar
@@ -533,15 +506,7 @@ struct EditorView: View {
     }
 
     private func openRecent(_ url: URL) {
-        NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, alreadyOpen, error in
-            guard error == nil else { return }
-            // Close the home/Untitled window if we were on the launcher.
-            DispatchQueue.main.async {
-                for doc in NSDocumentController.shared.documents where doc.fileURL == nil && !doc.isDocumentEdited {
-                    doc.close()
-                }
-            }
-        }
+        NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
     }
 
     // MARK: - Drop images
