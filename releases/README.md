@@ -6,7 +6,7 @@ Published versions on GitHub (do not reintroduce deleted intermediate tags):
 
 | Tag | Notes |
 |-----|--------|
-| `v1.3.10` | Current product |
+| `v1.3.0` | Current product |
 | `v1.2.0` | Branding milestone |
 | `v1.1.0` | UI milestone |
 | `v1.0.0` | First release |

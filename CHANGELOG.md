@@ -2,14 +2,14 @@
 
 Published GitHub releases (only these tags exist):
 
-- **v1.3.10** — current product  
+- **v1.3.0** — current product (was briefly tagged 1.3.10)  
 - **v1.2.0** — branding  
 - **v1.1.0** — UI refresh  
 - **v1.0.0** — first release  
 
 ---
 
-## [1.3.10] — 2026-08-11
+## [1.3.0] — 2026-08-11
 
 Current product build.
 

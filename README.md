@@ -9,7 +9,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Download
 
-**→ [Latest release (v1.3.10)](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
+**→ [Latest release (v1.3.0)](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
 
 | Asset | Machine |
 |-------|---------|
@@ -41,7 +41,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 | Version | Role |
 |---------|------|
-| **[1.3.10](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.3.10)** | **Current product** — usable daily build |
+| **[1.3.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.3.0)** | **Current product** — usable daily build |
 | [1.2.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.2.0) | Branding (final Gru icon) |
 | [1.1.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.1.0) | Apple-style UI |
 | [1.0.0](https://github.com/liangjiarui-dev/GruMD/releases/tag/v1.0.0) | First public release |
