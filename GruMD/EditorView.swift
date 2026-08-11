@@ -411,7 +411,7 @@ struct EditorView: View {
             if autoReloadExternal {
                 Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
             }
-            Text("GruMD 1.3.2")
+            Text("GruMD 1.3.3")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)

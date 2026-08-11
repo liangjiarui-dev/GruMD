@@ -18,7 +18,8 @@ struct MarkdownDocument: FileDocument {
 
     var text: String
 
-    init(text: String = defaultWelcome) {
+    /// Empty by default — no built-in welcome / sample Markdown.
+    init(text: String = "") {
         self.text = text
     }
 
@@ -26,7 +27,6 @@ struct MarkdownDocument: FileDocument {
         guard let data = configuration.file.regularFileContents else {
             throw CocoaError(.fileReadCorruptFile)
         }
-        // Prefer UTF-8; fall back to lossy conversion so files still open.
         if let string = String(data: data, encoding: .utf8) {
             text = string
         } else if let string = String(data: data, encoding: .isoLatin1) {
@@ -41,37 +41,3 @@ struct MarkdownDocument: FileDocument {
         return .init(regularFileWithContents: data)
     }
 }
-
-private let defaultWelcome = """
-# GruMD
-
-A quiet place for local Markdown.
-
-## Start here
-
-- Open a `.md` file, or just start typing
-- Save with **⌘S**
-- Switch layout with the control at the top-left
-
-## Sample
-
-| GFM | Supported |
-|-----|-----------|
-| Tables | Yes |
-| Task lists | Yes |
-| Code blocks | Yes |
-
-- [x] Read
-- [x] Edit
-- [ ] Ship something nice
-
-```swift
-print("Hello from GruMD 1.1")
-```
-
-> Designed to feel like a first-party macOS app — small, local, offline.
-
----
-
-*No vault. No plugins. No AI.*
-"""

@@ -69,7 +69,7 @@ struct SettingsView: View {
                     Text("General")
                 }
                 Section("About") {
-                    LabeledContent("Version", value: "1.3.2")
+                    LabeledContent("Version", value: "1.3.3")
                     LabeledContent("Build", value: "Local Markdown · Offline")
                 }
             }
