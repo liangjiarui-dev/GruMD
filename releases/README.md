@@ -8,7 +8,7 @@ This folder holds **locally built** DMGs from:
 
 Files here are **not committed** to git. Users download from **GitHub Releases**:
 
-**https://github.com/OWNER/GruMD/releases**
+**https://github.com/liangjiarui-dev/GruMD/releases**
 
 | File (example) | Architecture |
 |----------------|--------------|

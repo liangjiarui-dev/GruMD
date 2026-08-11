@@ -9,7 +9,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Download
 
-**→ [Get the latest release](https://github.com/OWNER/GruMD/releases/latest)**
+**→ [Get the latest release](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
 
 On the Releases page, pick the DMG that matches your Mac:
 
