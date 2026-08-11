@@ -13,7 +13,8 @@ xcuserdata/
 .DS_Store
 .AppleDouble
 .LSOverride
-Icon?
+# macOS folder custom icon resource (literal "Icon\r")
+Icon[]
 ._*
 .Spotlight-V100
 .Trashes
