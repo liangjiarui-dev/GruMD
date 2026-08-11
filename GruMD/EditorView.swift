@@ -257,7 +257,7 @@ struct EditorView: View {
                     .foregroundStyle(.secondary)
             }
 
-            Text("GruMD 1.1.2")
+            Text("GruMD 1.2")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)

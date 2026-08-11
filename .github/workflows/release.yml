@@ -41,19 +41,16 @@ jobs:
             releases/GruMD-*-intel.dmg
             releases/GruMD-*-universal.dmg
           body: |
-            ## What's new
+            ## GruMD ${{ github.ref_name }}
 
-            See [CHANGELOG.md](https://github.com/liangjiarui-dev/GruMD/blob/main/CHANGELOG.md) for this version.
+            See [CHANGELOG](https://github.com/liangjiarui-dev/GruMD/blob/main/CHANGELOG.md).
 
-            ## Downloads
+            **Recommended download:** this release (latest stable).
 
             | File | Mac |
             |------|-----|
-            | `GruMD-*-apple-silicon.dmg` | Apple Silicon (M1 / M2 / M3 / M4 …) |
+            | `GruMD-*-apple-silicon.dmg` | Apple Silicon |
             | `GruMD-*-intel.dmg` | Intel |
-            | `GruMD-*-universal.dmg` | Universal (both) |
+            | `GruMD-*-universal.dmg` | Universal |
 
-            ### Install
-
-            1. Open the DMG → drag **GruMD** into **Applications**.
-            2. If Gatekeeper blocks: right-click → **Open** → **Open**.
+            Install: open DMG → drag to Applications. If blocked: right-click → Open.

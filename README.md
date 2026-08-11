@@ -9,9 +9,7 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Download
 
-**→ [Get the latest release](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
-
-On the Releases page, pick the DMG that matches your Mac:
+**→ [Get the latest release (v1.2.0)](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
 
 | Asset | Machine |
 |-------|---------|
@@ -22,15 +20,12 @@ On the Releases page, pick the DMG that matches your Mac:
 ### Install
 
 1. Open the DMG → drag **GruMD** into **Applications**.
-2. First launch: if macOS warns about an unidentified developer, **right-click → Open → Open**.  
-   (Builds are ad-hoc signed unless you notarize with a paid Apple Developer ID.)
-
-> **Note for maintainers:** replace `OWNER` in the download link with your GitHub username after creating the repo (or run `./scripts/set_github_owner.sh yourname`).
+2. First launch: if macOS warns about an unidentified developer, **right-click → Open → Open**.
 
 ## Features
 
 - Open / edit / save local Markdown (Document-based app)
-- Split layout: source + live GFM preview (tables, task lists, code, local images)
+- Split layout: source + live GFM preview
 - Layout switch: Split · Editor · Preview
 - Optional reload when the file changes on disk
 - System light / dark appearance
@@ -41,54 +36,52 @@ On the Releases page, pick the DMG that matches your Mac:
 - macOS **13 Ventura** or later
 - Apple Silicon **or** Intel
 
+## Versions
+
+| Version | What it is |
+|---------|------------|
+| **1.2.0** | **Current** — 1.1 UI + final Gru icon, clean icon set |
+| 1.1.0 | Apple-style UI refresh |
+| 1.0.0 | First release |
+| 1.1.1 / 1.1.2 | Icon experiments only — use **1.2.0** instead |
+
+Full notes: [CHANGELOG.md](CHANGELOG.md)
+
 ## Build from source
 
 ```bash
 open GruMD.xcodeproj
-# or package DMGs locally:
+# or:
 ./scripts/build_and_package.sh
 ```
 
-Local DMGs land in `releases/` (gitignored). To publish them on GitHub:
+Publish a version (needs `gh` logged in), or push a `v*` tag for GitHub Actions:
 
 ```bash
-# needs: git remote + GitHub CLI (gh) logged in
-./scripts/publish_release.sh 1.1.0
+git tag v1.2.0 && git push origin v1.2.0
 ```
-
-## Versions
-
-| Version | Notes |
-|---------|--------|
-| **1.1.2** | Obvious Bob-face nickname icon (classic + subtle experiments archived) |
-| 1.1.1 | Too-subtle lens icon (superseded) |
-| 1.1.0 | Apple-style UI refresh, status bar, reader preview |
-| 1.0.0 | Initial release |
-
-See [CHANGELOG.md](CHANGELOG.md).
 
 ## Project layout
 
 ```
 GruMD/
-├── GruMD/                    # App sources & resources
+├── GruMD/                 # Sources & AppIcon assets
 ├── GruMD.xcodeproj/
 ├── scripts/
-│   ├── build_and_package.sh  # → local releases/*.dmg
-│   ├── publish_release.sh    # → GitHub Releases assets
-│   └── set_github_owner.sh   # fix README download links
-├── releases/                 # local DMG output only (not committed)
-├── LICENSE
-├── THIRD_PARTY_NOTICES.md
+│   ├── build_and_package.sh
+│   ├── publish_release.sh
+│   └── set_github_owner.sh
+├── docs/icons/            # Only classic + stockier Gru masters
+├── releases/              # Local DMGs (gitignored)
+├── CHANGELOG.md
 └── README.md
 ```
 
 ## Privacy & security
 
-- Local files only (App Sandbox + user-selected file access)
+- Local files only (App Sandbox)
 - No network API, no telemetry
-- External links in preview open in the system browser
-- Dependencies: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
+- See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 ## License
 
