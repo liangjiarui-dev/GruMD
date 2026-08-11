@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.8] — 2026-08-11
+
+### UI
+
+- Launcher credit line: “Crafted by Gru”
+
 ## [1.3.7] — 2026-08-11
 
 ### UI

@@ -136,11 +136,11 @@ struct LauncherView: View {
 
             // Footer
             HStack {
-                Text("由 Gru 制作")
+                Text("Crafted by Gru")
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .foregroundStyle(.secondary)
                 Spacer()
-                Text("v1.3.7")
+                Text("v1.3.8")
                     .font(.system(size: 11, design: .rounded))
                     .foregroundStyle(.quaternary)
             }
