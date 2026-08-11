@@ -41,7 +41,8 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 | Version | Notes |
 |---------|--------|
-| **1.3.1** | **Current** — layout simplified (Split/Preview), find toggle — find/replace, outline, focus, export, print, drag images |
+| **1.3.1** | **Current** — Split/Preview only, find magnifier toggle, larger window |
+| 1.3.0 | Find/replace, export, print, drag images, typography |
 | 1.2.0 | Final Gru icon branding |
 | 1.1.0 | Apple-style UI |
 | 1.0.0 | First release |
