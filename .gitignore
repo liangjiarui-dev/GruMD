@@ -1,0 +1,34 @@
+# Xcode / build
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# Packaging scratch (script temp dirs)
+.package-tmp/
+
+# Optional local secrets
+*.p12
+*.mobileprovision
+.env
+.env.*
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
