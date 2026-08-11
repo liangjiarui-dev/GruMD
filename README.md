@@ -9,27 +9,28 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Download
 
-**→ [Get the latest release (v1.2.0)](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
+**→ [Get the latest release](https://github.com/liangjiarui-dev/GruMD/releases/latest)**
 
 | Asset | Machine |
 |-------|---------|
-| `GruMD-*-apple-silicon.dmg` | Apple Silicon (M1 / M2 / M3 / M4 …) |
+| `GruMD-*-apple-silicon.dmg` | Apple Silicon |
 | `GruMD-*-intel.dmg` | Intel Mac |
-| `GruMD-*-universal.dmg` | Either (one file for both) |
+| `GruMD-*-universal.dmg` | Universal |
 
 ### Install
 
 1. Open the DMG → drag **GruMD** into **Applications**.
-2. First launch: if macOS warns about an unidentified developer, **right-click → Open → Open**.
+2. First launch: if blocked, **right-click → Open → Open**.
 
-## Features
+## Features (1.3)
 
-- Open / edit / save local Markdown (Document-based app)
-- Split layout: source + live GFM preview
-- Layout switch: Split · Editor · Preview
-- Optional reload when the file changes on disk
-- System light / dark appearance
-- Sandboxed, offline preview (bundled `marked.js`)
+- Open / edit / save local Markdown
+- Split · Editor · Preview · **Focus** layouts
+- **Find / Replace**, **outline** (H1–H3)
+- **Export HTML**, **Print**
+- **Recent files** welcome strip; drag images to insert paths
+- Offline GFM preview; optional disk reload
+- Typography preferences (editor + preview)
 
 ## Requirements
 
@@ -38,49 +39,22 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 ## Versions
 
-| Version | What it is |
-|---------|------------|
-| **1.2.0** | **Current** — 1.1 UI + final Gru icon |
-| 1.1.0 | Apple-style UI refresh |
+| Version | Notes |
+|---------|--------|
+| **1.3.0** | **Current** — find/replace, outline, focus, export, print, drag images |
+| 1.2.0 | Final Gru icon branding |
+| 1.1.0 | Apple-style UI |
 | 1.0.0 | First release |
 
-Full notes: [CHANGELOG.md](CHANGELOG.md)
+See [CHANGELOG.md](CHANGELOG.md).
 
-## Build from source
+## Build
 
 ```bash
 open GruMD.xcodeproj
-# or:
 ./scripts/build_and_package.sh
+# or: git tag v1.3.0 && git push origin v1.3.0
 ```
-
-Publish a version (needs `gh` logged in), or push a `v*` tag for GitHub Actions:
-
-```bash
-git tag v1.2.0 && git push origin v1.2.0
-```
-
-## Project layout
-
-```
-GruMD/
-├── GruMD/                 # Sources & AppIcon assets
-├── GruMD.xcodeproj/
-├── scripts/
-│   ├── build_and_package.sh
-│   ├── publish_release.sh
-│   └── set_github_owner.sh
-├── docs/icons/            # Only classic + stockier Gru masters
-├── releases/              # Local DMGs (gitignored)
-├── CHANGELOG.md
-└── README.md
-```
-
-## Privacy & security
-
-- Local files only (App Sandbox)
-- No network API, no telemetry
-- See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)
 
 ## License
 

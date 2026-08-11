@@ -6,6 +6,8 @@ struct MarkdownPreview: NSViewRepresentable {
     let markdown: String
     let baseURL: URL?
     let fontSize: Double
+    var maxWidthRem: Double = 42
+    var lineHeight: Double = 1.7
     var isDark: Bool
 
     func makeNSView(context: Context) -> WKWebView {
@@ -36,9 +38,19 @@ struct MarkdownPreview: NSViewRepresentable {
         let md = markdown
         let base = baseURL
         let size = fontSize
+        let maxW = maxWidthRem
+        let lh = lineHeight
         let dark = isDark
         DispatchQueue.main.async {
-            context.coordinator.load(markdown: md, into: webView, baseURL: base, fontSize: size, isDark: dark)
+            context.coordinator.load(
+                markdown: md,
+                into: webView,
+                baseURL: base,
+                fontSize: size,
+                maxWidthRem: maxW,
+                lineHeight: lh,
+                isDark: dark
+            )
         }
     }
 
@@ -64,8 +76,16 @@ struct MarkdownPreview: NSViewRepresentable {
             return src
         }()
 
-        func load(markdown: String, into webView: WKWebView, baseURL: URL?, fontSize: Double, isDark: Bool) {
-            let signature = "\(isDark)|\(fontSize)|\(baseURL?.path ?? "")|\(markdown)"
+        func load(
+            markdown: String,
+            into webView: WKWebView,
+            baseURL: URL?,
+            fontSize: Double,
+            maxWidthRem: Double,
+            lineHeight: Double,
+            isDark: Bool
+        ) {
+            let signature = "\(isDark)|\(fontSize)|\(maxWidthRem)|\(lineHeight)|\(baseURL?.path ?? "")|\(markdown)"
             guard signature != lastSignature else { return }
             lastSignature = signature
 
@@ -80,6 +100,8 @@ struct MarkdownPreview: NSViewRepresentable {
             <style>
             :root { --base-font-size: \(fontSize)px; }
             \(previewCSS)
+            body { line-height: \(lineHeight); }
+            .markdown-body { max-width: \(maxWidthRem)rem; line-height: \(lineHeight); }
             </style>
             <script>
             \(markedJS)

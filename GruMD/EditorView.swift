@@ -1,4 +1,6 @@
 import SwiftUI
+import UniformTypeIdentifiers
+import AppKit
 
 struct EditorView: View {
     @Binding var document: MarkdownDocument
@@ -9,6 +11,11 @@ struct EditorView: View {
     @AppStorage("editorFontSize") private var editorFontSize: Double = 13.5
     @AppStorage("autoReloadExternal") private var autoReloadExternal: Bool = true
     @AppStorage("showStatusBar") private var showStatusBar: Bool = true
+    @AppStorage("showOutline") private var showOutline: Bool = false
+    @AppStorage("editorMono") private var editorMono: Bool = true
+    @AppStorage("editorLineWrapping") private var editorLineWrapping: Bool = true
+    @AppStorage("previewMaxWidth") private var previewMaxWidth: Double = 42
+    @AppStorage("previewLineHeight") private var previewLineHeight: Double = 1.7
 
     @State private var layout: LayoutMode = .split
     @State private var didApplyDefaultLayout = false
@@ -17,6 +24,20 @@ struct EditorView: View {
     @State private var lastKnownTextOnDisk: String = ""
     @State private var isReloading = false
     @State private var watcherBox = FileWatcherBox()
+
+    // Find / replace
+    @State private var showFindBar = false
+    @State private var showReplaceFields = false
+    @State private var findQuery = ""
+    @State private var replaceText = ""
+    @State private var findCaseSensitive = false
+    @State private var findMatches: [TextMatch] = []
+    @State private var findIndex: Int = -1
+    @State private var findLineHint: Int?
+
+    @State private var dropTargeted = false
+    @State private var exportError: String?
+
     @Environment(\.colorScheme) private var colorScheme
 
     private var wordCount: Int {
@@ -31,12 +52,43 @@ struct EditorView: View {
         document.text.count
     }
 
+    private var outlineItems: [OutlineItem] {
+        MarkdownOutline.items(in: document.text)
+    }
+
+    private var recentURLs: [URL] {
+        NSDocumentController.shared.recentDocumentURLs.filter {
+            ["md", "markdown", "mdown", "mkd", "txt"].contains($0.pathExtension.lowercased())
+        }
+    }
+
+    private var showsWelcomeChrome: Bool {
+        fileURL == nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
-            chromeBar
+            if layout != .focus {
+                chromeBar
+            }
+            if showFindBar && layout != .focus && layout != .previewOnly {
+                FindReplaceBar(
+                    query: $findQuery,
+                    replacement: $replaceText,
+                    caseSensitive: $findCaseSensitive,
+                    showReplace: $showReplaceFields,
+                    matchCount: findMatches.count,
+                    currentIndex: findIndex,
+                    onNext: { stepFind(1) },
+                    onPrevious: { stepFind(-1) },
+                    onReplace: replaceCurrent,
+                    onReplaceAll: replaceAll,
+                    onClose: closeFind
+                )
+            }
             content
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            if showStatusBar {
+            if showStatusBar && layout != .focus {
                 statusBar
             }
         }
@@ -49,9 +101,7 @@ struct EditorView: View {
             lastKnownTextOnDisk = document.text
             rebindWatcher()
         }
-        .onDisappear {
-            watcherBox.watcher.stop()
-        }
+        .onDisappear { watcherBox.watcher.stop() }
         .onChange(of: fileURL?.path) { _ in
             lastKnownTextOnDisk = document.text
             rebindWatcher()
@@ -60,9 +110,28 @@ struct EditorView: View {
             if newValue == lastKnownTextOnDisk {
                 watcherBox.watcher.ignoreEvents(for: 1.0)
             }
+            refreshFindMatches(resetIndex: false)
         }
-        .onChange(of: autoReloadExternal) { _ in
-            rebindWatcher()
+        .onChange(of: findQuery) { _ in refreshFindMatches(resetIndex: true) }
+        .onChange(of: findCaseSensitive) { _ in refreshFindMatches(resetIndex: true) }
+        .onChange(of: autoReloadExternal) { _ in rebindWatcher() }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdShowFind)) { _ in
+            openFind(replace: false)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdShowReplace)) { _ in
+            openFind(replace: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdExportHTML)) { _ in
+            exportHTML()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdPrint)) { _ in
+            printDocument()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdToggleOutline)) { _ in
+            showOutline.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .grumdFocusPreview)) { _ in
+            withAnimation { layout = .focus }
         }
         .alert("File Changed on Disk", isPresented: $showReloadAlert) {
             Button("Reload from Disk", role: .destructive) {
@@ -74,28 +143,62 @@ struct EditorView: View {
                 }
                 pendingDiskText = nil
             }
-            Button("Keep My Edits", role: .cancel) {
-                pendingDiskText = nil
-            }
+            Button("Keep My Edits", role: .cancel) { pendingDiskText = nil }
         } message: {
             Text("This Markdown file was modified by another app. Reload and discard unsaved changes in GruMD, or keep your current edits?")
+        }
+        .alert("Export Failed", isPresented: Binding(
+            get: { exportError != nil },
+            set: { if !$0 { exportError = nil } }
+        )) {
+            Button("OK", role: .cancel) { exportError = nil }
+        } message: {
+            Text(exportError ?? "")
         }
     }
 
     // MARK: - Chrome
 
     private var chromeBar: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             layoutControl
 
-            Spacer(minLength: 8)
+            Button {
+                showOutline.toggle()
+            } label: {
+                Image(systemName: "list.bullet.indent")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(showOutline ? GruMDTheme.accent : Color.secondary)
+                    .frame(width: 28, height: 26)
+            }
+            .buttonStyle(.plain)
+            .help("Toggle outline")
 
+            Button {
+                openFind(replace: false)
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(showFindBar ? GruMDTheme.accent : Color.secondary)
+                    .frame(width: 28, height: 26)
+            }
+            .buttonStyle(.plain)
+            .help("Find")
+
+            Spacer(minLength: 8)
             fileTitle
-
             Spacer(minLength: 8)
 
-            // Visual balance for traffic lights / title
-            Color.clear.frame(width: 120, height: 1)
+            Menu {
+                Button("Export HTML…") { exportHTML() }
+                Button("Print…") { printDocument() }
+            } label: {
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 36)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
@@ -113,23 +216,19 @@ struct EditorView: View {
             }
         }
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 0.5)
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 0.5)
         }
     }
 
     private var layoutControl: some View {
         HStack(spacing: 0) {
-            ForEach(LayoutMode.allCases) { mode in
+            ForEach(LayoutMode.chromeModes) { mode in
                 Button {
-                    withAnimation(.easeInOut(duration: 0.18)) {
-                        layout = mode
-                    }
+                    withAnimation(.easeInOut(duration: 0.18)) { layout = mode }
                 } label: {
                     Image(systemName: mode.systemImage)
-                        .font(.system(size: 13, weight: .semibold))
-                        .frame(width: 34, height: 26)
+                        .font(.system(size: 12, weight: .semibold))
+                        .frame(width: 30, height: 26)
                         .foregroundStyle(layout == mode ? Color.white : Color.secondary)
                         .background {
                             if layout == mode {
@@ -148,10 +247,6 @@ struct EditorView: View {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.06))
         }
-        .overlay {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.06), lineWidth: 0.5)
-        }
     }
 
     private var fileTitle: some View {
@@ -161,7 +256,6 @@ struct EditorView: View {
                 .foregroundStyle(GruMDTheme.accent)
             Text(fileURL?.lastPathComponent ?? "Untitled")
                 .font(.system(size: 13, weight: .medium, design: .rounded))
-                .foregroundStyle(.primary)
                 .lineLimit(1)
                 .truncationMode(.middle)
         }
@@ -177,47 +271,188 @@ struct EditorView: View {
 
     @ViewBuilder
     private var content: some View {
-        switch layout {
-        case .split:
-            HSplitView {
-                editorPane
-                    .frame(minWidth: 260)
-                previewPane
-                    .frame(minWidth: 280)
+        HStack(spacing: 0) {
+            if showOutline && layout != .focus {
+                outlineSidebar
+                    .frame(width: 200)
+                Rectangle()
+                    .fill(Color.primary.opacity(0.08))
+                    .frame(width: 0.5)
             }
-        case .editorOnly:
-            editorPane
-        case .previewOnly:
-            previewPane
+
+            mainWorkspace
         }
     }
 
-    private var editorPane: some View {
+    @ViewBuilder
+    private var mainWorkspace: some View {
+        switch layout {
+        case .split:
+            HSplitView {
+                editorColumn.frame(minWidth: 240)
+                previewColumn.frame(minWidth: 260)
+            }
+        case .editorOnly:
+            editorColumn
+        case .previewOnly, .focus:
+            previewColumn
+        }
+    }
+
+    private var editorColumn: some View {
         VStack(spacing: 0) {
-            paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
+            if showsWelcomeChrome {
+                welcomeStrip
+            }
+            if layout != .focus {
+                paneHeader(title: "Editor", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
             TextEditor(text: $document.text)
-                .font(GruMDTheme.editorFont(size: editorFontSize))
+                .font(editorFont)
                 .scrollContentBackground(.hidden)
                 .padding(.horizontal, 18)
                 .padding(.vertical, 14)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(GruMDTheme.contentBackground)
+                .overlay {
+                    if dropTargeted {
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(GruMDTheme.accent, lineWidth: 2)
+                            .padding(6)
+                    }
+                }
+                .onDrop(of: [UTType.fileURL], isTargeted: $dropTargeted, perform: handleDrop)
                 .accessibilityLabel("Markdown editor")
         }
     }
 
-    private var previewPane: some View {
+    private var previewColumn: some View {
         VStack(spacing: 0) {
-            paneHeader(title: "Preview", systemImage: "eye")
+            if layout != .focus {
+                paneHeader(title: layout == .focus ? "Focus" : "Preview", systemImage: "eye")
+            } else {
+                HStack {
+                    Text("Focus Preview")
+                        .font(GruMDTheme.paneLabel)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Exit Focus") {
+                        withAnimation { layout = .split }
+                    }
+                    .controlSize(.small)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial)
+            }
             MarkdownPreview(
                 markdown: document.text,
                 baseURL: fileURL?.deletingLastPathComponent(),
                 fontSize: previewFontSize,
+                maxWidthRem: previewMaxWidth,
+                lineHeight: previewLineHeight,
                 isDark: colorScheme == .dark
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(GruMDTheme.contentBackground)
             .accessibilityLabel("Markdown preview")
+        }
+    }
+
+    private var outlineSidebar: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("OUTLINE")
+                    .font(GruMDTheme.paneLabel)
+                    .foregroundStyle(.secondary)
+                    .tracking(0.6)
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+
+            if outlineItems.isEmpty {
+                Text("No headings")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+                    .padding(12)
+                Spacer()
+            } else {
+                List(outlineItems) { item in
+                    Button {
+                        // Best-effort: jump by rewriting is not ideal; show line in status via find hint
+                        findLineHint = item.lineIndex + 1
+                        // Insert nothing — scroll not available on TextEditor; copy line into find for visibility
+                        if layout == .previewOnly || layout == .focus {
+                            layout = .split
+                        }
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(String(repeating: "  ", count: item.level - 1) + item.title)
+                                .font(.system(size: 12, design: .rounded))
+                                .lineLimit(1)
+                                .foregroundStyle(.primary)
+                            Spacer()
+                            Text("L\(item.lineIndex + 1)")
+                                .font(.system(size: 10, design: .monospaced))
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                .listStyle(.sidebar)
+            }
+        }
+        .background(Color(nsColor: .controlBackgroundColor).opacity(0.35))
+    }
+
+    private var welcomeStrip: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 12) {
+                Image(nsImage: NSApp.applicationIconImage)
+                    .resizable()
+                    .frame(width: 40, height: 40)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("GruMD")
+                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    Text("Open a Markdown file or start typing.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Open…") { openPanel() }
+                    .keyboardShortcut("o", modifiers: [.command])
+            }
+
+            if !recentURLs.isEmpty {
+                Text("Recent")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.secondary)
+                ForEach(Array(recentURLs.prefix(6).enumerated()), id: \.offset) { _, url in
+                    Button {
+                        openRecent(url)
+                    } label: {
+                        HStack {
+                            Image(systemName: "doc.text")
+                                .foregroundStyle(GruMDTheme.accent)
+                            Text(url.lastPathComponent)
+                                .lineLimit(1)
+                            Spacer()
+                            Text(url.deletingLastPathComponent().path)
+                                .font(.caption2)
+                                .foregroundStyle(.tertiary)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(14)
+        .background(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
+        .overlay(alignment: .bottom) {
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 0.5)
         }
     }
 
@@ -231,33 +466,34 @@ struct EditorView: View {
                 .foregroundStyle(.secondary)
                 .tracking(0.6)
             Spacer()
+            if let findLineHint {
+                Text("Line \(findLineHint)")
+                    .font(.system(size: 10, design: .rounded))
+                    .foregroundStyle(.tertiary)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 7)
         .background(Color.primary.opacity(colorScheme == .dark ? 0.06 : 0.03))
         .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 0.5)
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 0.5)
         }
     }
-
-    // MARK: - Status
 
     private var statusBar: some View {
         HStack(spacing: 14) {
             Label("\(lineCount) lines", systemImage: "text.alignleft")
             Label("\(wordCount) words", systemImage: "textformat.abc")
             Label("\(charCount) chars", systemImage: "character")
-
+            if showFindBar, !findQuery.isEmpty {
+                Text(findMatches.isEmpty ? "No matches" : "Find \(max(findIndex, 0) + 1)/\(findMatches.count)")
+                    .foregroundStyle(GruMDTheme.accent)
+            }
             Spacer()
-
             if autoReloadExternal {
                 Label("Live reload", systemImage: "arrow.triangle.2.circlepath")
-                    .foregroundStyle(.secondary)
             }
-
-            Text("GruMD 1.2")
+            Text("GruMD 1.3")
                 .foregroundStyle(.tertiary)
         }
         .labelStyle(.titleAndIcon)
@@ -272,10 +508,191 @@ struct EditorView: View {
             }
         }
         .overlay(alignment: .top) {
-            Rectangle()
-                .fill(Color.primary.opacity(0.06))
-                .frame(height: 0.5)
+            Rectangle().fill(Color.primary.opacity(0.06)).frame(height: 0.5)
         }
+    }
+
+    private var editorFont: Font {
+        if editorMono {
+            return .system(size: editorFontSize, design: .monospaced)
+        }
+        return .system(size: editorFontSize, design: .default)
+    }
+
+    // MARK: - Find
+
+    private func openFind(replace: Bool) {
+        showFindBar = true
+        showReplaceFields = replace
+        refreshFindMatches(resetIndex: true)
+    }
+
+    private func closeFind() {
+        showFindBar = false
+        findLineHint = nil
+    }
+
+    private func refreshFindMatches(resetIndex: Bool) {
+        findMatches = FindReplaceSupport.matches(
+            in: document.text,
+            query: findQuery,
+            caseSensitive: findCaseSensitive
+        )
+        if findMatches.isEmpty {
+            findIndex = -1
+            findLineHint = nil
+        } else if resetIndex || findIndex < 0 || findIndex >= findMatches.count {
+            findIndex = 0
+            updateFindLineHint()
+        } else {
+            updateFindLineHint()
+        }
+    }
+
+    private func stepFind(_ delta: Int) {
+        guard !findMatches.isEmpty else { return }
+        if findIndex < 0 {
+            findIndex = 0
+        } else {
+            findIndex = (findIndex + delta + findMatches.count) % findMatches.count
+        }
+        updateFindLineHint()
+    }
+
+    private func updateFindLineHint() {
+        guard findIndex >= 0, findIndex < findMatches.count else {
+            findLineHint = nil
+            return
+        }
+        findLineHint = FindReplaceSupport.lineNumber(of: findMatches[findIndex], in: document.text)
+    }
+
+    private func replaceCurrent() {
+        guard findIndex >= 0, findIndex < findMatches.count else { return }
+        let match = findMatches[findIndex]
+        document.text.replaceSubrange(match.range, with: replaceText)
+        refreshFindMatches(resetIndex: false)
+        if findMatches.isEmpty {
+            findIndex = -1
+        } else {
+            findIndex = min(findIndex, findMatches.count - 1)
+            updateFindLineHint()
+        }
+    }
+
+    private func replaceAll() {
+        document.text = FindReplaceSupport.replaceAll(
+            in: document.text,
+            query: findQuery,
+            replacement: replaceText,
+            caseSensitive: findCaseSensitive
+        )
+        refreshFindMatches(resetIndex: true)
+    }
+
+    // MARK: - Export / Print / Open
+
+    private func exportHTML() {
+        let html = MarkdownHTML.fullDocument(
+            markdown: document.text,
+            fontSize: previewFontSize,
+            maxWidthRem: previewMaxWidth,
+            isDark: false
+        )
+        let panel = NSSavePanel()
+        panel.allowedContentTypes = [.html]
+        panel.nameFieldStringValue = (fileURL?.deletingPathExtension().lastPathComponent ?? "Untitled") + ".html"
+        panel.canCreateDirectories = true
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            do {
+                try html.write(to: url, atomically: true, encoding: .utf8)
+            } catch {
+                exportError = error.localizedDescription
+            }
+        }
+    }
+
+    private func printDocument() {
+        let html = MarkdownHTML.fullDocument(
+            markdown: document.text,
+            fontSize: previewFontSize,
+            maxWidthRem: previewMaxWidth,
+            isDark: false
+        )
+        PrintSupport.printHTML(html, jobTitle: fileURL?.lastPathComponent ?? "GruMD")
+    }
+
+    private func openPanel() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.plainText, UTType(filenameExtension: "md") ?? .plainText]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.begin { response in
+            guard response == .OK, let url = panel.url else { return }
+            openRecent(url)
+        }
+    }
+
+    private func openRecent(_ url: URL) {
+        NSDocumentController.shared.openDocument(withContentsOf: url, display: true) { _, _, _ in }
+    }
+
+    // MARK: - Drop images
+
+    private func handleDrop(providers: [NSItemProvider]) -> Bool {
+        var handled = false
+        for provider in providers {
+            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, _ in
+                    let url: URL?
+                    if let data = item as? Data {
+                        url = URL(dataRepresentation: data, relativeTo: nil)
+                    } else if let u = item as? URL {
+                        url = u
+                    } else {
+                        url = nil
+                    }
+                    guard let file = url else { return }
+                    let ext = file.pathExtension.lowercased()
+                    guard ["png", "jpg", "jpeg", "gif", "webp", "tiff", "bmp", "heic"].contains(ext) else { return }
+                    DispatchQueue.main.async {
+                        insertImageMarkdown(for: file)
+                    }
+                }
+                handled = true
+            }
+        }
+        return handled
+    }
+
+    private func insertImageMarkdown(for imageURL: URL) {
+        let rel: String
+        if let base = fileURL?.deletingLastPathComponent() {
+            rel = relativePath(from: base, to: imageURL)
+        } else {
+            rel = imageURL.lastPathComponent
+        }
+        let alt = imageURL.deletingPathExtension().lastPathComponent
+        let snippet = "![\(alt)](\(rel))"
+        if document.text.isEmpty || document.text.hasSuffix("\n") {
+            document.text += snippet + "\n"
+        } else {
+            document.text += "\n" + snippet + "\n"
+        }
+    }
+
+    private func relativePath(from base: URL, to target: URL) -> String {
+        let baseParts = base.standardizedFileURL.pathComponents
+        let targetParts = target.standardizedFileURL.pathComponents
+        var i = 0
+        while i < baseParts.count, i < targetParts.count, baseParts[i] == targetParts[i] {
+            i += 1
+        }
+        let ups = Array(repeating: "..", count: baseParts.count - i)
+        let downs = Array(targetParts[i...])
+        let parts = ups + downs
+        return parts.isEmpty ? target.lastPathComponent : parts.joined(separator: "/")
     }
 
     // MARK: - File watch
@@ -291,17 +708,13 @@ struct EditorView: View {
     private func handleExternalChange(at url: URL) {
         guard !isReloading else { return }
         guard let data = try? Data(contentsOf: url),
-              let diskText = String(data: data, encoding: .utf8) else {
-            return
-        }
+              let diskText = String(data: data, encoding: .utf8) else { return }
 
         if diskText == document.text {
             lastKnownTextOnDisk = diskText
             return
         }
-        if diskText == lastKnownTextOnDisk {
-            return
-        }
+        if diskText == lastKnownTextOnDisk { return }
 
         if document.text == lastKnownTextOnDisk {
             isReloading = true
@@ -319,4 +732,13 @@ struct EditorView: View {
 
 private final class FileWatcherBox {
     let watcher = FileWatcher()
+}
+
+extension Notification.Name {
+    static let grumdShowFind = Notification.Name("grumdShowFind")
+    static let grumdShowReplace = Notification.Name("grumdShowReplace")
+    static let grumdExportHTML = Notification.Name("grumdExportHTML")
+    static let grumdPrint = Notification.Name("grumdPrint")
+    static let grumdToggleOutline = Notification.Name("grumdToggleOutline")
+    static let grumdFocusPreview = Notification.Name("grumdFocusPreview")
 }
