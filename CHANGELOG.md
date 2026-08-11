@@ -10,10 +10,6 @@ Stable branding + cleanup release.
 - Classic pure-document icon kept only as alternate master (`docs/icons/app-icon-1.1-classic-1024.png`)
 - Removed experimental icon variants from the repo
 
-### Notes
-
-- Supersedes intermediate icon tags **1.1.1** / **1.1.2** (nickname experiments). Prefer **1.2.0** for download.
-
 ## [1.1.0] — 2026-08-11
 
 ### UI

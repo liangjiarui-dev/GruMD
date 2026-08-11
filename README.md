@@ -40,10 +40,9 @@ Open a local `.md` file, edit it, preview common GFM, save. No vault, no plugins
 
 | Version | What it is |
 |---------|------------|
-| **1.2.0** | **Current** — 1.1 UI + final Gru icon, clean icon set |
+| **1.2.0** | **Current** — 1.1 UI + final Gru icon |
 | 1.1.0 | Apple-style UI refresh |
 | 1.0.0 | First release |
-| 1.1.1 / 1.1.2 | Icon experiments only — use **1.2.0** instead |
 
 Full notes: [CHANGELOG.md](CHANGELOG.md)
 
